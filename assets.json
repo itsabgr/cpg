@@ -1,0 +1,12 @@
+{
+  "bnb-testnet": {
+    "type": "eth",
+    "enable": true,
+    "eth_client_endpoint": "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
+    "tx_gas_limit": 10000000,
+    "min_delay_seconds": 2,
+    "chain_id": 97,
+    "min_allowed_amount": 100000000,
+    "max_allowed_gas_price": 10000000000000
+  }
+}

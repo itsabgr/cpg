@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+option go_package = "../proto";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+service CPG {
+  rpc Ping(PingInput) returns (PingOutput);
+  rpc ListAssets(google.protobuf.Empty) returns (ListAssetsOutput);
+  rpc RecoverInvoice(RecoverInvoiceInput) returns (google.protobuf.Empty);
+  rpc CreateInvoice(CreateInvoiceInput) returns (CreateInvoiceOutput);
+  rpc CancelInvoice(CancelInvoiceInput) returns (google.protobuf.Empty);
+  rpc GetInvoice(GetInvoiceInput) returns (GetInvoiceOutput);
+  rpc CheckInvoice(CheckInvoiceInput) returns (CheckInvoiceOutput);
+}
+
+message PingInput {
+  string text = 1;
+}
+
+message PingOutput {
+  google.protobuf.Timestamp now = 1;
+  string text = 2;
+}
+
+message ListAssetsOutput{
+  map<string,AssetInfo> assets = 1;
+}
+
+message RecoverInvoiceInput {
+  string invoice_id = 1;
+  bytes invoice_backup = 2;
+}
+
+message RecoverInvoiceOutput {
+  string invoice_id = 1;
+}
+
+message CreateInvoiceInput {
+  string asset_name = 1;
+  string metadata = 2;
+  string recipient = 3;
+  string beneficiary = 4;
+  string min_amount = 5;
+  google.protobuf.Timestamp deadline = 6;
+}
+
+message CreateInvoiceOutput {
+  string invoice_id = 1;
+  bytes invoice_backup = 2;
+}
+
+message CancelInvoiceInput {
+  string invoice_id = 1;
+}
+
+message GetInvoiceInput {
+  string invoice_id = 1;
+}
+
+message GetInvoiceOutput {
+  string min_amount = 2;
+  string recipient = 3;
+  string beneficiary = 4;
+  string asset = 5;
+  google.protobuf.Timestamp create_at = 6;
+  google.protobuf.Timestamp deadline = 7;
+  optional  google.protobuf.Timestamp fill_at = 8;
+  optional  google.protobuf.Timestamp cancel_at = 9;
+  string wallet_address = 10;
+  InvoiceStatus status = 11;
+  string metadata = 12;
+}
+
+message CheckInvoiceInput {
+  string invoice_id = 1;
+}
+
+message CheckInvoiceOutput {
+  InvoiceStatus invoice_status = 1;
+}
+
+enum InvoiceStatus {
+  INVOICE_STATUS_UNSPECIFIED = 0;
+  INVOICE_STATUS_PENDING = 1;
+  INVOICE_STATUS_FILLED = 2;
+  INVOICE_STATUS_CANCELED = 3;
+  INVOICE_STATUS_EXPIRED = 4;
+}
+
+message AssetInfo {
+  google.protobuf.Duration min_delay = 2;
+}
