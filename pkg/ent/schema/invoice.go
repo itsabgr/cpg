@@ -3,7 +3,6 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"math/big"
 	"time"
 )
@@ -26,7 +25,5 @@ func (Invoice) Fields() []ent.Field {
 		field.Time("cancel_at").Optional().Nillable(),
 		field.String("wallet_address").NotEmpty().Immutable(),
 		field.Bytes("encrypted_salt").Sensitive().Unique().NotEmpty().Immutable(),
-		field.Time("lock_expire_at").Default(time.Now),
-		field.UUID("lock_holder", uuid.UUID{}).Unique().Default(uuid.New),
 	}
 }

@@ -293,7 +293,7 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 	_spec := sqlgraph.NewUpdateSpec(invoice.Table, invoice.Columns, sqlgraph.NewFieldSpec(invoice.FieldID, field.TypeString))
 	id, ok := iuo.mutation.ID()
 	if !ok {
-		return nil, &ValidationError{Name: "id", err: errors.New(`model: missing "Invoice.id" for update`)}
+		return nil, &ValidationError{Name: "id", err: errors.New(`database: missing "Invoice.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
 	if fields := iuo.fields; len(fields) > 0 {
@@ -301,7 +301,7 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 		_spec.Node.Columns = append(_spec.Node.Columns, invoice.FieldID)
 		for _, f := range fields {
 			if !invoice.ValidColumn(f) {
-				return nil, &ValidationError{Name: f, err: fmt.Errorf("model: invalid field %q for query", f)}
+				return nil, &ValidationError{Name: f, err: fmt.Errorf("database: invalid field %q for query", f)}
 			}
 			if f != invoice.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, f)

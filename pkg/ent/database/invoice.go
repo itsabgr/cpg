@@ -189,7 +189,7 @@ func (i *Invoice) Update() *InvoiceUpdateOne {
 func (i *Invoice) Unwrap() *Invoice {
 	_tx, ok := i.config.driver.(*txDriver)
 	if !ok {
-		panic("model: Invoice is not a transactional entity")
+		panic("database: Invoice is not a transactional entity")
 	}
 	i.config.driver = _tx.drv
 	return i

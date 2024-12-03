@@ -112,7 +112,7 @@ func Open(driverName, dataSourceName string, options ...Option) (*Client, error)
 }
 
 // ErrTxStarted is returned when trying to start a new transaction from a transactional client.
-var ErrTxStarted = errors.New("model: cannot start a transaction within a transaction")
+var ErrTxStarted = errors.New("database: cannot start a transaction within a transaction")
 
 // Tx returns a new transactional client. The provided context
 // is used until the transaction is committed or rolled back.
@@ -122,7 +122,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	}
 	tx, err := newTx(ctx, c.driver)
 	if err != nil {
-		return nil, fmt.Errorf("model: starting a transaction: %w", err)
+		return nil, fmt.Errorf("database: starting a transaction: %w", err)
 	}
 	cfg := c.config
 	cfg.driver = tx
@@ -193,7 +193,7 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	case *InvoiceMutation:
 		return c.Invoice.mutate(ctx, m)
 	default:
-		return nil, fmt.Errorf("model: unknown mutation type %T", m)
+		return nil, fmt.Errorf("database: unknown mutation type %T", m)
 	}
 }
 
@@ -326,7 +326,7 @@ func (c *InvoiceClient) mutate(ctx context.Context, m *InvoiceMutation) (Value, 
 	case OpDelete, OpDeleteOne:
 		return (&InvoiceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("model: unknown Invoice mutation op: %q", m.Op())
+		return nil, fmt.Errorf("database: unknown Invoice mutation op: %q", m.Op())
 	}
 }
 

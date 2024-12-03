@@ -117,7 +117,7 @@ func (m InvoiceMutation) Client() *Client {
 // it returns an error otherwise.
 func (m InvoiceMutation) Tx() (*Tx, error) {
 	if _, ok := m.driver.(*txDriver); !ok {
-		return nil, errors.New("model: mutation is not running in a transaction")
+		return nil, errors.New("database: mutation is not running in a transaction")
 	}
 	tx := &Tx{config: m.config}
 	tx.init()

@@ -70,18 +70,12 @@ func (cpg *CPG) RecoverInvoice(ctx context.Context, params RecoverInvoiceParams)
 		return
 	}
 
-	lockErr := cpg.db.LockInvoice(ctx, inv.ID, func(ctx context.Context) {
-		if err = assetProvider.PrepareInvoice(ctx, inv); err != nil {
-			err = ge.Wrap(ge.New("failed to prepare recovered invoice"), err)
-			return
-		}
-		if err = cpg.db.InsertInvoice(ctx, inv, true); err != nil {
-			err = ge.Wrap(ge.New("failed to insert invoice into db"), err)
-			return
-		}
-	})
-	if lockErr != nil {
-		err = ge.Wrap(ge.New("failed to lock invoice"), lockErr)
+	if err = assetProvider.PrepareInvoice(ctx, inv); err != nil {
+		err = ge.Wrap(ge.New("failed to prepare recovered invoice"), err)
+		return
+	}
+	if err = cpg.db.InsertInvoice(ctx, inv, true); err != nil {
+		err = ge.Wrap(ge.New("failed to insert invoice into db"), err)
 		return
 	}
 	return
@@ -164,32 +158,25 @@ type CancelInvoiceParams struct {
 }
 
 func (cpg *CPG) CancelInvoice(ctx context.Context, params CancelInvoiceParams) (err error) {
-	lockErr := cpg.db.LockInvoice(ctx, params.InvoiceID, func(ctx context.Context) {
-		var inv *Invoice
-		inv, err = cpg.db.GetInvoice(ctx, params.InvoiceID, false)
-		if err != nil {
-			err = ge.Wrap(ge.New("failed to get invoice"), err)
-			return
-		}
-		if inv == nil {
-			err = ge.New("invoice not found")
-			return
-		}
+	var inv *Invoice
+	inv, err = cpg.db.GetInvoice(ctx, params.InvoiceID, false)
+	if err != nil {
+		err = ge.Wrap(ge.New("failed to get invoice"), err)
+		return
+	}
+	if inv == nil {
+		err = ge.New("invoice not found")
+		return
+	}
 
-		invoiceStatus := inv.Status()
-		if invoiceStatus != InvoiceStatusPending {
-			err = ge.Detail(ge.New("invoice status is not pending"), ge.D{"invoiceStatus": invoiceStatus})
-			return
-		}
-		now := time.Now()
-		if err = cpg.db.SetInvoiceCancelAt(ctx, params.InvoiceID, now); err != nil {
-			err = ge.Wrap(ge.New("failed to update invoice cancelAt"), err)
-			return
-		}
-		inv.CancelAt = &now
-	})
-	if lockErr != nil {
-		err = ge.Wrap(ge.New("failed to lock invoice"), lockErr)
+	invoiceStatus := inv.Status()
+	if invoiceStatus != InvoiceStatusPending {
+		err = ge.Detail(ge.New("invoice status is not pending"), ge.D{"invoiceStatus": invoiceStatus})
+		return
+	}
+	now := time.Now()
+	if err = cpg.db.SetInvoiceCancelAt(ctx, params.InvoiceID, now); err != nil {
+		err = ge.Wrap(ge.New("failed to update invoice cancelAt"), err)
 		return
 	}
 	return
@@ -250,55 +237,48 @@ type CheckInvoiceResult struct {
 }
 
 func (cpg *CPG) CheckInvoice(ctx context.Context, params CheckInvoiceParams) (result CheckInvoiceResult, err error) {
-	lockErr := cpg.db.LockInvoice(ctx, params.InvoiceID, func(ctx context.Context) {
-		var inv *Invoice
-		inv, err = cpg.db.GetInvoice(ctx, params.InvoiceID, true)
+	var inv *Invoice
+	inv, err = cpg.db.GetInvoice(ctx, params.InvoiceID, true)
+	if err != nil {
+		err = ge.Wrap(ge.New("failed to get invoice"), err)
+		return
+	}
+	if inv == nil {
+		err = ge.New("invoice not found")
+		return
+	}
+
+	assetProvider := cpg.assets.Get(inv.Asset)
+	if assetProvider == nil {
+		err = ge.New("asset is not supported no more")
+		return
+	}
+
+	result.InvoiceStatus = inv.Status()
+	switch result.InvoiceStatus {
+	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled:
+	case InvoiceStatusPending:
+		var invoiceBalance *big.Int
+		invoiceBalance, err = assetProvider.GetBalance(ctx, inv)
 		if err != nil {
-			err = ge.Wrap(ge.New("failed to get invoice"), err)
+			err = ge.Wrap(ge.New("failed to get invoice balance"), err)
 			return
 		}
-		if inv == nil {
-			err = ge.New("invoice not found")
+		if invoiceBalance.Cmp(&inv.MinAmount) < 0 {
 			return
 		}
-
-		assetProvider := cpg.assets.Get(inv.Asset)
-		if assetProvider == nil {
-			err = ge.New("asset is not supported no more")
+		now := time.Now()
+		if err = cpg.db.SetInvoiceFillAt(ctx, inv.ID, now); err != nil {
+			err = ge.Wrap(ge.New("failed to update invoice fill_at"), err)
 			return
 		}
+		inv.FillAt = &now
+	default:
+		panic(ge.UNREACHABLE)
+	}
 
-		result.InvoiceStatus = inv.Status()
-		switch result.InvoiceStatus {
-		case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled:
-		case InvoiceStatusPending:
-			var invoiceBalance *big.Int
-			invoiceBalance, err = assetProvider.GetBalance(ctx, inv)
-			if err != nil {
-				err = ge.Wrap(ge.New("failed to get invoice balance"), err)
-				return
-			}
-			if invoiceBalance.Cmp(&inv.MinAmount) < 0 {
-				return
-			}
-			now := time.Now()
-			if err = cpg.db.SetInvoiceFillAt(ctx, inv.ID, now); err != nil {
-				err = ge.Wrap(ge.New("failed to update invoice fill_at"), err)
-				return
-			}
-			inv.FillAt = &now
-		default:
-			panic(ge.UNREACHABLE)
-		}
-
-		if err = assetProvider.TryFlush(ctx, inv); err == nil {
-			err = ge.Wrap(ge.New("failed to flush invoice"), err)
-			return
-		}
-	})
-
-	if lockErr != nil {
-		err = ge.Wrap(ge.New("failed to lock invoice"), lockErr)
+	if err = assetProvider.TryFlush(ctx, inv); err == nil {
+		err = ge.Wrap(ge.New("failed to flush invoice"), err)
 		return
 	}
 

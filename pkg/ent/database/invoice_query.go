@@ -223,7 +223,7 @@ func (iq *InvoiceQuery) Exist(ctx context.Context) (bool, error) {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
-		return false, fmt.Errorf("model: check existence: %w", err)
+		return false, fmt.Errorf("database: check existence: %w", err)
 	default:
 		return true, nil
 	}
@@ -268,7 +268,7 @@ func (iq *InvoiceQuery) Clone() *InvoiceQuery {
 //
 //	client.Invoice.Query().
 //		GroupBy(invoice.FieldMinAmount).
-//		Aggregate(model.Count()).
+//		Aggregate(database.Count()).
 //		Scan(ctx, &v)
 func (iq *InvoiceQuery) GroupBy(field string, fields ...string) *InvoiceGroupBy {
 	iq.ctx.Fields = append([]string{field}, fields...)
@@ -307,7 +307,7 @@ func (iq *InvoiceQuery) Aggregate(fns ...AggregateFunc) *InvoiceSelect {
 func (iq *InvoiceQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range iq.inters {
 		if inter == nil {
-			return fmt.Errorf("model: uninitialized interceptor (forgotten import model/runtime?)")
+			return fmt.Errorf("database: uninitialized interceptor (forgotten import database/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
 			if err := trv.Traverse(ctx, iq); err != nil {
@@ -317,7 +317,7 @@ func (iq *InvoiceQuery) prepareQuery(ctx context.Context) error {
 	}
 	for _, f := range iq.ctx.Fields {
 		if !invoice.ValidColumn(f) {
-			return &ValidationError{Name: f, err: fmt.Errorf("model: invalid field %q for query", f)}
+			return &ValidationError{Name: f, err: fmt.Errorf("database: invalid field %q for query", f)}
 		}
 	}
 	if iq.path != nil {

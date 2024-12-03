@@ -198,76 +198,76 @@ func (ic *InvoiceCreate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (ic *InvoiceCreate) check() error {
 	if _, ok := ic.mutation.MinAmount(); !ok {
-		return &ValidationError{Name: "min_amount", err: errors.New(`model: missing required field "Invoice.min_amount"`)}
+		return &ValidationError{Name: "min_amount", err: errors.New(`database: missing required field "Invoice.min_amount"`)}
 	}
 	if v, ok := ic.mutation.MinAmount(); ok {
 		if err := invoice.MinAmountValidator(v.String()); err != nil {
-			return &ValidationError{Name: "min_amount", err: fmt.Errorf(`model: validator failed for field "Invoice.min_amount": %w`, err)}
+			return &ValidationError{Name: "min_amount", err: fmt.Errorf(`database: validator failed for field "Invoice.min_amount": %w`, err)}
 		}
 	}
 	if _, ok := ic.mutation.Recipient(); !ok {
-		return &ValidationError{Name: "recipient", err: errors.New(`model: missing required field "Invoice.recipient"`)}
+		return &ValidationError{Name: "recipient", err: errors.New(`database: missing required field "Invoice.recipient"`)}
 	}
 	if v, ok := ic.mutation.Recipient(); ok {
 		if err := invoice.RecipientValidator(v); err != nil {
-			return &ValidationError{Name: "recipient", err: fmt.Errorf(`model: validator failed for field "Invoice.recipient": %w`, err)}
+			return &ValidationError{Name: "recipient", err: fmt.Errorf(`database: validator failed for field "Invoice.recipient": %w`, err)}
 		}
 	}
 	if _, ok := ic.mutation.Beneficiary(); !ok {
-		return &ValidationError{Name: "beneficiary", err: errors.New(`model: missing required field "Invoice.beneficiary"`)}
+		return &ValidationError{Name: "beneficiary", err: errors.New(`database: missing required field "Invoice.beneficiary"`)}
 	}
 	if v, ok := ic.mutation.Beneficiary(); ok {
 		if err := invoice.BeneficiaryValidator(v); err != nil {
-			return &ValidationError{Name: "beneficiary", err: fmt.Errorf(`model: validator failed for field "Invoice.beneficiary": %w`, err)}
+			return &ValidationError{Name: "beneficiary", err: fmt.Errorf(`database: validator failed for field "Invoice.beneficiary": %w`, err)}
 		}
 	}
 	if _, ok := ic.mutation.Asset(); !ok {
-		return &ValidationError{Name: "asset", err: errors.New(`model: missing required field "Invoice.asset"`)}
+		return &ValidationError{Name: "asset", err: errors.New(`database: missing required field "Invoice.asset"`)}
 	}
 	if v, ok := ic.mutation.Asset(); ok {
 		if err := invoice.AssetValidator(v); err != nil {
-			return &ValidationError{Name: "asset", err: fmt.Errorf(`model: validator failed for field "Invoice.asset": %w`, err)}
+			return &ValidationError{Name: "asset", err: fmt.Errorf(`database: validator failed for field "Invoice.asset": %w`, err)}
 		}
 	}
 	if _, ok := ic.mutation.Metadata(); !ok {
-		return &ValidationError{Name: "metadata", err: errors.New(`model: missing required field "Invoice.metadata"`)}
+		return &ValidationError{Name: "metadata", err: errors.New(`database: missing required field "Invoice.metadata"`)}
 	}
 	if v, ok := ic.mutation.Metadata(); ok {
 		if err := invoice.MetadataValidator(v); err != nil {
-			return &ValidationError{Name: "metadata", err: fmt.Errorf(`model: validator failed for field "Invoice.metadata": %w`, err)}
+			return &ValidationError{Name: "metadata", err: fmt.Errorf(`database: validator failed for field "Invoice.metadata": %w`, err)}
 		}
 	}
 	if _, ok := ic.mutation.CreateAt(); !ok {
-		return &ValidationError{Name: "create_at", err: errors.New(`model: missing required field "Invoice.create_at"`)}
+		return &ValidationError{Name: "create_at", err: errors.New(`database: missing required field "Invoice.create_at"`)}
 	}
 	if _, ok := ic.mutation.Deadline(); !ok {
-		return &ValidationError{Name: "deadline", err: errors.New(`model: missing required field "Invoice.deadline"`)}
+		return &ValidationError{Name: "deadline", err: errors.New(`database: missing required field "Invoice.deadline"`)}
 	}
 	if _, ok := ic.mutation.WalletAddress(); !ok {
-		return &ValidationError{Name: "wallet_address", err: errors.New(`model: missing required field "Invoice.wallet_address"`)}
+		return &ValidationError{Name: "wallet_address", err: errors.New(`database: missing required field "Invoice.wallet_address"`)}
 	}
 	if v, ok := ic.mutation.WalletAddress(); ok {
 		if err := invoice.WalletAddressValidator(v); err != nil {
-			return &ValidationError{Name: "wallet_address", err: fmt.Errorf(`model: validator failed for field "Invoice.wallet_address": %w`, err)}
+			return &ValidationError{Name: "wallet_address", err: fmt.Errorf(`database: validator failed for field "Invoice.wallet_address": %w`, err)}
 		}
 	}
 	if _, ok := ic.mutation.EncryptedSalt(); !ok {
-		return &ValidationError{Name: "encrypted_salt", err: errors.New(`model: missing required field "Invoice.encrypted_salt"`)}
+		return &ValidationError{Name: "encrypted_salt", err: errors.New(`database: missing required field "Invoice.encrypted_salt"`)}
 	}
 	if v, ok := ic.mutation.EncryptedSalt(); ok {
 		if err := invoice.EncryptedSaltValidator(v); err != nil {
-			return &ValidationError{Name: "encrypted_salt", err: fmt.Errorf(`model: validator failed for field "Invoice.encrypted_salt": %w`, err)}
+			return &ValidationError{Name: "encrypted_salt", err: fmt.Errorf(`database: validator failed for field "Invoice.encrypted_salt": %w`, err)}
 		}
 	}
 	if _, ok := ic.mutation.LockExpireAt(); !ok {
-		return &ValidationError{Name: "lock_expire_at", err: errors.New(`model: missing required field "Invoice.lock_expire_at"`)}
+		return &ValidationError{Name: "lock_expire_at", err: errors.New(`database: missing required field "Invoice.lock_expire_at"`)}
 	}
 	if _, ok := ic.mutation.LockHolder(); !ok {
-		return &ValidationError{Name: "lock_holder", err: errors.New(`model: missing required field "Invoice.lock_holder"`)}
+		return &ValidationError{Name: "lock_holder", err: errors.New(`database: missing required field "Invoice.lock_holder"`)}
 	}
 	if v, ok := ic.mutation.ID(); ok {
 		if err := invoice.IDValidator(v); err != nil {
-			return &ValidationError{Name: "id", err: fmt.Errorf(`model: validator failed for field "Invoice.id": %w`, err)}
+			return &ValidationError{Name: "id", err: fmt.Errorf(`database: validator failed for field "Invoice.id": %w`, err)}
 		}
 	}
 	return nil

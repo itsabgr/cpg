@@ -17,7 +17,7 @@ func (f InvoiceFunc) Mutate(ctx context.Context, m database.Mutation) (database.
 	if mv, ok := m.(*database.InvoiceMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *model.InvoiceMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *database.InvoiceMutation", m)
 }
 
 // Condition is a hook condition function.
@@ -128,14 +128,14 @@ func If(hk database.Hook, cond Condition) database.Hook {
 
 // On executes the given hook only for the given operation.
 //
-//	hook.On(Log, model.Delete|model.Create)
+//	hook.On(Log, database.Delete|database.Create)
 func On(hk database.Hook, op database.Op) database.Hook {
 	return If(hk, HasOp(op))
 }
 
 // Unless skips the given hook only for the given operation.
 //
-//	hook.Unless(Log, model.Update|model.UpdateOne)
+//	hook.Unless(Log, database.Update|database.UpdateOne)
 func Unless(hk database.Hook, op database.Op) database.Hook {
 	return If(hk, Not(HasOp(op)))
 }
@@ -151,9 +151,9 @@ func FixedError(err error) database.Hook {
 
 // Reject returns a hook that rejects all operations that match op.
 //
-//	func (T) Hooks() []model.Hook {
-//		return []model.Hook{
-//			Reject(model.Delete|model.Update),
+//	func (T) Hooks() []database.Hook {
+//		return []database.Hook{
+//			Reject(database.Delete|database.Update),
 //		}
 //	}
 func Reject(op database.Op) database.Hook {
