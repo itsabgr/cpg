@@ -142,6 +142,21 @@ func (serv grpcServer) CheckInvoice(ctx context.Context, input *proto.CheckInvoi
 
 }
 
+func (serv grpcServer) TryCheckoutInvoice(ctx context.Context, input *proto.TryCheckoutInvoiceInput) (*empty.Empty, error) {
+
+	err := serv.cpg.TryCheckoutInvoice(ctx, TryCheckoutInvoiceParams{
+		InvoiceID:    input.GetInvoiceId(),
+		CheckBalance: input.GetCheckBalance(),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+
+}
+
 func optionalTime2timestamp(t *time.Time) *timestamppb.Timestamp {
 	if t == nil {
 		return nil

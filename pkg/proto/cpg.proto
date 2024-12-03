@@ -14,11 +14,14 @@ service CPG {
   rpc CancelInvoice(CancelInvoiceInput) returns (google.protobuf.Empty);
   rpc GetInvoice(GetInvoiceInput) returns (GetInvoiceOutput);
   rpc CheckInvoice(CheckInvoiceInput) returns (CheckInvoiceOutput);
+  rpc TryCheckoutInvoice(TryCheckoutInvoiceInput) returns (google.protobuf.Empty);
 }
 
 message PingInput {
   string text = 1;
 }
+
+
 
 message PingOutput {
   google.protobuf.Timestamp now = 1;
@@ -80,6 +83,11 @@ message CheckInvoiceInput {
 
 message CheckInvoiceOutput {
   InvoiceStatus invoice_status = 1;
+}
+
+message TryCheckoutInvoiceInput{
+  string invoice_id = 1;
+  bool check_balance = 2;
 }
 
 enum InvoiceStatus {
