@@ -4,6 +4,7 @@ import (
 	"context"
 	"cpg/pkg/ent/database"
 	"cpg/pkg/ent/database/invoice"
+	"github.com/itsabgr/ge"
 	"time"
 )
 
@@ -20,11 +21,25 @@ func NewDB(client *database.Client) *DB {
 }
 
 func (db *DB) SetInvoiceCancelAt(ctx context.Context, id string, cancelAt time.Time) error {
-	return db.client.Invoice.UpdateOneID(id).SetCancelAt(cancelAt).Exec(ctx)
+	inv, err := db.client.Invoice.UpdateOneID(id).Where(invoice.FillAtNotNil()).SetCancelAt(cancelAt).Save(ctx)
+	if err != nil {
+		return err
+	}
+	if inv == nil {
+		return ge.New("invoice did not update")
+	}
+	return nil
 }
 
 func (db *DB) SetInvoiceFillAt(ctx context.Context, id string, fillAt time.Time) error {
-	return db.client.Invoice.UpdateOneID(id).SetFillAt(fillAt).Exec(ctx)
+	inv, err := db.client.Invoice.UpdateOneID(id).Where(invoice.CancelAtNotNil()).SetFillAt(fillAt).Save(ctx)
+	if err != nil {
+		return err
+	}
+	if inv == nil {
+		return ge.New("invoice did not update")
+	}
+	return nil
 }
 
 func (db *DB) InsertInvoice(ctx context.Context, inv *Invoice, recovered bool) error {
