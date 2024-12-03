@@ -11,7 +11,6 @@ require (
 	github.com/itsabgr/fak v0.0.0-20241002094150-fe044273aded
 	github.com/itsabgr/ge v0.0.0-20241202140951-7f5c5d99dde6
 	github.com/itsabgr/ge/plot v0.0.0-20241201123719-35d05ee8b6ee
-	github.com/itsabgr/retry v0.0.0-20241127222152-1c39cf052795
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	golang.org/x/crypto v0.29.0

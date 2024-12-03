@@ -265,6 +265,7 @@ func (cpg *CPG) CheckInvoice(ctx context.Context, params CheckInvoiceParams) (re
 			return
 		}
 		if invoiceBalance.Cmp(&inv.MinAmount) < 0 {
+			err = ge.Detail(ge.New("insufficient wallet balance"), ge.D{"balance": invoiceBalance.String()})
 			return
 		}
 		now := time.Now()
