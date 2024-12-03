@@ -14,27 +14,32 @@ import (
 type InvoiceStatus int
 
 const (
+	InvoiceStatusInvalid  InvoiceStatus = 0
 	InvoiceStatusPending  InvoiceStatus = 1
 	InvoiceStatusFilled   InvoiceStatus = 2
 	InvoiceStatusExpired  InvoiceStatus = 3
 	InvoiceStatusCanceled InvoiceStatus = 4
+	InvoiceStatusCheckout InvoiceStatus = 5
 )
 
+var ErrInvalidInvoiceStatus = ge.New("invoice has invalid status")
+
 type Invoice struct {
-	_             sync.Mutex
-	ID            string
-	MinAmount     big.Int
-	Recipient     string
-	Beneficiary   string
-	Asset         string
-	Metadata      string
-	CreateAt      time.Time
-	Deadline      time.Time
-	FillAt        *time.Time
-	CancelAt      *time.Time
-	WalletAddress string
-	EncryptedSalt []byte
-	saltKeyring   *crypto.KeyRing
+	_              sync.Mutex
+	ID             string
+	MinAmount      big.Int
+	Recipient      string
+	Beneficiary    string
+	Asset          string
+	Metadata       string
+	CreateAt       time.Time
+	Deadline       time.Time
+	FillAt         *time.Time
+	LastCheckoutAt *time.Time
+	CancelAt       *time.Time
+	WalletAddress  string
+	EncryptedSalt  []byte
+	saltKeyring    *crypto.KeyRing
 }
 
 func (inv *Invoice) DecryptSalt() []byte {
@@ -49,26 +54,33 @@ func (inv *Invoice) Destination() string {
 	switch inv.Status() {
 	case InvoiceStatusExpired, InvoiceStatusCanceled:
 		return inv.Beneficiary
-	case InvoiceStatusFilled, InvoiceStatusPending:
+	case InvoiceStatusFilled, InvoiceStatusPending, InvoiceStatusCheckout:
 		return inv.Recipient
 	default:
-		panic(ge.UNREACHABLE)
+		panic(ErrInvalidInvoiceStatus)
 	}
 }
 
 func (inv *Invoice) Status() InvoiceStatus {
-	if inv.FillAt == nil {
-		if inv.CancelAt == nil {
-			if inv.Deadline.After(time.Now()) {
-				return InvoiceStatusPending
+	if inv.FillAt != nil && inv.CancelAt != nil {
+		return InvoiceStatusInvalid
+	}
+	if inv.LastCheckoutAt == nil {
+		if inv.FillAt == nil {
+			if inv.CancelAt == nil {
+				if inv.Deadline.After(time.Now()) {
+					return InvoiceStatusPending
+				} else {
+					return InvoiceStatusExpired
+				}
 			} else {
-				return InvoiceStatusExpired
+				return InvoiceStatusCanceled
 			}
 		} else {
-			return InvoiceStatusCanceled
+			return InvoiceStatusFilled
 		}
 	} else {
-		return InvoiceStatusFilled
+		return InvoiceStatusCheckout
 	}
 }
 

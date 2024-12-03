@@ -98,24 +98,24 @@ type CreateInvoiceResult struct {
 func (cpg *CPG) CreateInvoice(ctx context.Context, params CreateInvoiceParams) (result CreateInvoiceResult, err error) {
 	if params.Beneficiary == params.Recipient {
 		err = ge.New("same beneficiary and recipient")
-		return
+		return result, err
 	}
 	if params.MinAmount.Cmp(big.NewInt(0)) <= 0 {
 		err = ge.New("non positive min amount")
-		return
+		return result, err
 	}
 	if len(params.Metadata) >= 256 {
 		err = ge.New("too big metadata")
-		return
+		return result, err
 	}
 	if false == !params.Deadline.After(time.Now()) {
 		err = ge.New("past deadline")
-		return
+		return result, err
 	}
 	assetProvider := cpg.assets.Get(params.AssetName)
 	if assetProvider == nil {
 		err = ge.New("asset not found")
-		return
+		return result, err
 	}
 
 	assetInfo := assetProvider.Info()
@@ -134,7 +134,7 @@ func (cpg *CPG) CreateInvoice(ctx context.Context, params CreateInvoiceParams) (
 	inv.WalletAddress = ""
 	if err = assetProvider.PrepareInvoice(ctx, inv); err != nil {
 		err = ge.Wrap(ge.New("failed to prepare invoice"), err)
-		return
+		return result, err
 	}
 	ge.Assert(inv.WalletAddress != "")
 
@@ -143,7 +143,7 @@ func (cpg *CPG) CreateInvoice(ctx context.Context, params CreateInvoiceParams) (
 
 	if err = cpg.db.InsertInvoice(ctx, inv, false); err != nil {
 		err = ge.Wrap(ge.New("failed to insert invoice into db"), err)
-		return
+		return result, err
 	}
 
 	return
@@ -162,24 +162,31 @@ func (cpg *CPG) CancelInvoice(ctx context.Context, params CancelInvoiceParams) (
 	inv, err = cpg.db.GetInvoice(ctx, params.InvoiceID, false)
 	if err != nil {
 		err = ge.Wrap(ge.New("failed to get invoice"), err)
-		return
+		return err
 	}
 	if inv == nil {
 		err = ge.New("invoice not found")
-		return
+		return err
 	}
 
 	invoiceStatus := inv.Status()
-	if invoiceStatus != InvoiceStatusPending {
+
+	switch invoiceStatus {
+	case InvoiceStatusPending:
+	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled, InvoiceStatusCheckout:
 		err = ge.Detail(ge.New("invoice status is not pending"), ge.D{"invoiceStatus": invoiceStatus})
-		return
+		return err
+	default:
+		err = ErrInvalidInvoiceStatus
+		return err
 	}
+
 	now := time.Now()
 	if err = cpg.db.SetInvoiceCancelAt(ctx, params.InvoiceID, now); err != nil {
 		err = ge.Wrap(ge.New("failed to update invoice cancelAt"), err)
-		return
+		return err
 	}
-	return
+	return err
 }
 
 type GetInvoiceParams struct {
@@ -262,11 +269,11 @@ func (cpg *CPG) TryCheckoutInvoice(ctx context.Context, params TryCheckoutInvoic
 	}
 
 	switch inv.Status() {
-	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled:
+	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled, InvoiceStatusCheckout:
 	case InvoiceStatusPending:
 		return ge.New("invoice is pending to fill")
 	default:
-		panic(ge.UNREACHABLE)
+		return ErrInvalidInvoiceStatus
 
 	}
 
@@ -297,7 +304,7 @@ func (cpg *CPG) checkInvoice(ctx context.Context, id string, getBalance bool) (i
 	}
 
 	switch inv.Status() {
-	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled:
+	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled, InvoiceStatusCheckout:
 	case InvoiceStatusPending:
 		if getBalance {
 			var invoiceBalance *big.Int
@@ -321,7 +328,7 @@ func (cpg *CPG) checkInvoice(ctx context.Context, id string, getBalance bool) (i
 			return nil, nil, err
 		}
 	default:
-		panic(ge.UNREACHABLE)
+		return nil, nil, ErrInvalidInvoiceStatus
 	}
 	return inv, assetProvider, nil
 }

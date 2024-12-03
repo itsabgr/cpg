@@ -107,6 +107,11 @@ func FillAt(v time.Time) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldFillAt, v))
 }
 
+// LastCheckoutAt applies equality check predicate on the "last_checkout_at" field. It's identical to LastCheckoutAtEQ.
+func LastCheckoutAt(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldLastCheckoutAt, v))
+}
+
 // CancelAt applies equality check predicate on the "cancel_at" field. It's identical to CancelAtEQ.
 func CancelAt(v time.Time) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldCancelAt, v))
@@ -624,6 +629,56 @@ func FillAtIsNil() predicate.Invoice {
 // FillAtNotNil applies the NotNil predicate on the "fill_at" field.
 func FillAtNotNil() predicate.Invoice {
 	return predicate.Invoice(sql.FieldNotNull(FieldFillAt))
+}
+
+// LastCheckoutAtEQ applies the EQ predicate on the "last_checkout_at" field.
+func LastCheckoutAtEQ(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldLastCheckoutAt, v))
+}
+
+// LastCheckoutAtNEQ applies the NEQ predicate on the "last_checkout_at" field.
+func LastCheckoutAtNEQ(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldLastCheckoutAt, v))
+}
+
+// LastCheckoutAtIn applies the In predicate on the "last_checkout_at" field.
+func LastCheckoutAtIn(vs ...time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldIn(FieldLastCheckoutAt, vs...))
+}
+
+// LastCheckoutAtNotIn applies the NotIn predicate on the "last_checkout_at" field.
+func LastCheckoutAtNotIn(vs ...time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotIn(FieldLastCheckoutAt, vs...))
+}
+
+// LastCheckoutAtGT applies the GT predicate on the "last_checkout_at" field.
+func LastCheckoutAtGT(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGT(FieldLastCheckoutAt, v))
+}
+
+// LastCheckoutAtGTE applies the GTE predicate on the "last_checkout_at" field.
+func LastCheckoutAtGTE(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGTE(FieldLastCheckoutAt, v))
+}
+
+// LastCheckoutAtLT applies the LT predicate on the "last_checkout_at" field.
+func LastCheckoutAtLT(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLT(FieldLastCheckoutAt, v))
+}
+
+// LastCheckoutAtLTE applies the LTE predicate on the "last_checkout_at" field.
+func LastCheckoutAtLTE(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLTE(FieldLastCheckoutAt, v))
+}
+
+// LastCheckoutAtIsNil applies the IsNil predicate on the "last_checkout_at" field.
+func LastCheckoutAtIsNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldIsNull(FieldLastCheckoutAt))
+}
+
+// LastCheckoutAtNotNil applies the NotNil predicate on the "last_checkout_at" field.
+func LastCheckoutAtNotNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotNull(FieldLastCheckoutAt))
 }
 
 // CancelAtEQ applies the EQ predicate on the "cancel_at" field.

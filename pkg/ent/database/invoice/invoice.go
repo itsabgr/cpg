@@ -31,6 +31,8 @@ const (
 	FieldDeadline = "deadline"
 	// FieldFillAt holds the string denoting the fill_at field in the database.
 	FieldFillAt = "fill_at"
+	// FieldLastCheckoutAt holds the string denoting the last_checkout_at field in the database.
+	FieldLastCheckoutAt = "last_checkout_at"
 	// FieldCancelAt holds the string denoting the cancel_at field in the database.
 	FieldCancelAt = "cancel_at"
 	// FieldWalletAddress holds the string denoting the wallet_address field in the database.
@@ -52,6 +54,7 @@ var Columns = []string{
 	FieldCreateAt,
 	FieldDeadline,
 	FieldFillAt,
+	FieldLastCheckoutAt,
 	FieldCancelAt,
 	FieldWalletAddress,
 	FieldEncryptedSalt,
@@ -138,6 +141,11 @@ func ByDeadline(opts ...sql.OrderTermOption) OrderOption {
 // ByFillAt orders the results by the fill_at field.
 func ByFillAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldFillAt, opts...).ToFunc()
+}
+
+// ByLastCheckoutAt orders the results by the last_checkout_at field.
+func ByLastCheckoutAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastCheckoutAt, opts...).ToFunc()
 }
 
 // ByCancelAt orders the results by the cancel_at field.

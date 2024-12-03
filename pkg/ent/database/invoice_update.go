@@ -48,6 +48,26 @@ func (iu *InvoiceUpdate) ClearFillAt() *InvoiceUpdate {
 	return iu
 }
 
+// SetLastCheckoutAt sets the "last_checkout_at" field.
+func (iu *InvoiceUpdate) SetLastCheckoutAt(t time.Time) *InvoiceUpdate {
+	iu.mutation.SetLastCheckoutAt(t)
+	return iu
+}
+
+// SetNillableLastCheckoutAt sets the "last_checkout_at" field if the given value is not nil.
+func (iu *InvoiceUpdate) SetNillableLastCheckoutAt(t *time.Time) *InvoiceUpdate {
+	if t != nil {
+		iu.SetLastCheckoutAt(*t)
+	}
+	return iu
+}
+
+// ClearLastCheckoutAt clears the value of the "last_checkout_at" field.
+func (iu *InvoiceUpdate) ClearLastCheckoutAt() *InvoiceUpdate {
+	iu.mutation.ClearLastCheckoutAt()
+	return iu
+}
+
 // SetCancelAt sets the "cancel_at" field.
 func (iu *InvoiceUpdate) SetCancelAt(t time.Time) *InvoiceUpdate {
 	iu.mutation.SetCancelAt(t)
@@ -115,6 +135,12 @@ func (iu *InvoiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if iu.mutation.FillAtCleared() {
 		_spec.ClearField(invoice.FieldFillAt, field.TypeTime)
 	}
+	if value, ok := iu.mutation.LastCheckoutAt(); ok {
+		_spec.SetField(invoice.FieldLastCheckoutAt, field.TypeTime, value)
+	}
+	if iu.mutation.LastCheckoutAtCleared() {
+		_spec.ClearField(invoice.FieldLastCheckoutAt, field.TypeTime)
+	}
 	if value, ok := iu.mutation.CancelAt(); ok {
 		_spec.SetField(invoice.FieldCancelAt, field.TypeTime, value)
 	}
@@ -158,6 +184,26 @@ func (iuo *InvoiceUpdateOne) SetNillableFillAt(t *time.Time) *InvoiceUpdateOne {
 // ClearFillAt clears the value of the "fill_at" field.
 func (iuo *InvoiceUpdateOne) ClearFillAt() *InvoiceUpdateOne {
 	iuo.mutation.ClearFillAt()
+	return iuo
+}
+
+// SetLastCheckoutAt sets the "last_checkout_at" field.
+func (iuo *InvoiceUpdateOne) SetLastCheckoutAt(t time.Time) *InvoiceUpdateOne {
+	iuo.mutation.SetLastCheckoutAt(t)
+	return iuo
+}
+
+// SetNillableLastCheckoutAt sets the "last_checkout_at" field if the given value is not nil.
+func (iuo *InvoiceUpdateOne) SetNillableLastCheckoutAt(t *time.Time) *InvoiceUpdateOne {
+	if t != nil {
+		iuo.SetLastCheckoutAt(*t)
+	}
+	return iuo
+}
+
+// ClearLastCheckoutAt clears the value of the "last_checkout_at" field.
+func (iuo *InvoiceUpdateOne) ClearLastCheckoutAt() *InvoiceUpdateOne {
+	iuo.mutation.ClearLastCheckoutAt()
 	return iuo
 }
 
@@ -257,6 +303,12 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 	}
 	if iuo.mutation.FillAtCleared() {
 		_spec.ClearField(invoice.FieldFillAt, field.TypeTime)
+	}
+	if value, ok := iuo.mutation.LastCheckoutAt(); ok {
+		_spec.SetField(invoice.FieldLastCheckoutAt, field.TypeTime, value)
+	}
+	if iuo.mutation.LastCheckoutAtCleared() {
+		_spec.ClearField(invoice.FieldLastCheckoutAt, field.TypeTime)
 	}
 	if value, ok := iuo.mutation.CancelAt(); ok {
 		_spec.SetField(invoice.FieldCancelAt, field.TypeTime, value)

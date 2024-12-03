@@ -13,6 +13,8 @@ type DB struct {
 	lockTTL time.Duration
 }
 
+var ErrInvoiceNotUpdate = ge.New("invoice did not update")
+
 func NewDB(client *database.Client) *DB {
 	return &DB{
 		client:  client,
@@ -20,24 +22,60 @@ func NewDB(client *database.Client) *DB {
 	}
 }
 
-func (db *DB) SetInvoiceCancelAt(ctx context.Context, id string, cancelAt time.Time) error {
-	inv, err := db.client.Invoice.UpdateOneID(id).Where(invoice.FillAtNotNil()).SetCancelAt(cancelAt).Save(ctx)
+func (db *DB) SetInvoiceCancelAt(ctx context.Context, id string, at time.Time) error {
+	inv, err := db.client.Invoice.UpdateOneID(id).Where(
+		invoice.DeadlineGT(time.Now()),
+		invoice.FillAtIsNil(),
+		invoice.LastCheckoutAtIsNil(),
+		invoice.CancelAtIsNil(),
+	).SetCancelAt(at).Save(ctx)
 	if err != nil {
+		if database.IsNotFound(err) {
+			return ErrInvoiceNotUpdate
+		}
 		return err
 	}
 	if inv == nil {
-		return ge.New("invoice did not update")
+		return ErrInvoiceNotUpdate
 	}
 	return nil
 }
 
-func (db *DB) SetInvoiceFillAt(ctx context.Context, id string, fillAt time.Time) error {
-	inv, err := db.client.Invoice.UpdateOneID(id).Where(invoice.CancelAtNotNil()).SetFillAt(fillAt).Save(ctx)
+func (db *DB) SetInvoiceFillAt(ctx context.Context, id string, at time.Time) error {
+	inv, err := db.client.Invoice.UpdateOneID(id).Where(
+		invoice.DeadlineGT(time.Now()),
+		invoice.FillAtIsNil(),
+		invoice.LastCheckoutAtIsNil(),
+		invoice.CancelAtIsNil(),
+	).SetFillAt(at).Save(ctx)
 	if err != nil {
+		if database.IsNotFound(err) {
+			return ErrInvoiceNotUpdate
+		}
 		return err
 	}
 	if inv == nil {
-		return ge.New("invoice did not update")
+		return ErrInvoiceNotUpdate
+	}
+	return nil
+}
+
+func (db *DB) SetInvoiceCheckoutAt(ctx context.Context, id string, at time.Time) error {
+	inv, err := db.client.Invoice.UpdateOneID(id).Where(
+		invoice.Or(
+			invoice.DeadlineLT(time.Now()),
+			invoice.FillAtNotNil(),
+			invoice.CancelAtNotNil(),
+		),
+	).SetLastCheckoutAt(at).Save(ctx)
+	if err != nil {
+		if database.IsNotFound(err) {
+			return ErrInvoiceNotUpdate
+		}
+		return err
+	}
+	if inv == nil {
+		return ErrInvoiceNotUpdate
 	}
 	return nil
 }
@@ -67,6 +105,7 @@ func (db *DB) GetInvoice(ctx context.Context, id string, withSalt bool) (*Invoic
 		invoice.FieldCreateAt,
 		invoice.FieldDeadline,
 		invoice.FieldFillAt,
+		invoice.FieldLastCheckoutAt,
 		invoice.FieldCancelAt,
 		invoice.FieldWalletAddress,
 	}
@@ -82,18 +121,19 @@ func (db *DB) GetInvoice(ctx context.Context, id string, withSalt bool) (*Invoic
 		return nil, err
 	}
 	inv := &Invoice{
-		ID:            id,
-		MinAmount:     *found.MinAmount,
-		Recipient:     found.Recipient,
-		Beneficiary:   found.Beneficiary,
-		Asset:         found.Asset,
-		Metadata:      found.Metadata,
-		CreateAt:      found.CreateAt,
-		Deadline:      found.Deadline,
-		FillAt:        found.FillAt,
-		CancelAt:      found.CancelAt,
-		WalletAddress: found.WalletAddress,
-		EncryptedSalt: found.EncryptedSalt,
+		ID:             id,
+		MinAmount:      *found.MinAmount,
+		Recipient:      found.Recipient,
+		Beneficiary:    found.Beneficiary,
+		Asset:          found.Asset,
+		Metadata:       found.Metadata,
+		CreateAt:       found.CreateAt,
+		Deadline:       found.Deadline,
+		FillAt:         found.FillAt,
+		LastCheckoutAt: found.LastCheckoutAt,
+		CancelAt:       found.CancelAt,
+		WalletAddress:  found.WalletAddress,
+		EncryptedSalt:  found.EncryptedSalt,
 	}
 
 	return inv, nil

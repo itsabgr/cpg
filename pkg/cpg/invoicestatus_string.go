@@ -8,20 +8,21 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
+	_ = x[InvoiceStatusInvalid-0]
 	_ = x[InvoiceStatusPending-1]
 	_ = x[InvoiceStatusFilled-2]
 	_ = x[InvoiceStatusExpired-3]
 	_ = x[InvoiceStatusCanceled-4]
+	_ = x[InvoiceStatusCheckout-5]
 }
 
-const _InvoiceStatus_name = "InvoiceStatusPendingInvoiceStatusFilledInvoiceStatusExpiredInvoiceStatusCanceled"
+const _InvoiceStatus_name = "InvoiceStatusInvalidInvoiceStatusPendingInvoiceStatusFilledInvoiceStatusExpiredInvoiceStatusCanceledInvoiceStatusCheckout"
 
-var _InvoiceStatus_index = [...]uint8{0, 20, 39, 59, 80}
+var _InvoiceStatus_index = [...]uint8{0, 20, 40, 59, 79, 100, 121}
 
 func (i InvoiceStatus) String() string {
-	i -= 1
 	if i < 0 || i >= InvoiceStatus(len(_InvoiceStatus_index)-1) {
-		return "InvoiceStatus(" + strconv.FormatInt(int64(i+1), 10) + ")"
+		return "InvoiceStatus(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 	return _InvoiceStatus_name[_InvoiceStatus_index[i]:_InvoiceStatus_index[i+1]]
 }

@@ -43,11 +43,11 @@ func init() {
 	// invoice.DefaultCreateAt holds the default value on creation for the create_at field.
 	invoice.DefaultCreateAt = invoiceDescCreateAt.Default.(func() time.Time)
 	// invoiceDescWalletAddress is the schema descriptor for wallet_address field.
-	invoiceDescWalletAddress := invoiceFields[10].Descriptor()
+	invoiceDescWalletAddress := invoiceFields[11].Descriptor()
 	// invoice.WalletAddressValidator is a validator for the "wallet_address" field. It is called by the builders before save.
 	invoice.WalletAddressValidator = invoiceDescWalletAddress.Validators[0].(func(string) error)
 	// invoiceDescEncryptedSalt is the schema descriptor for encrypted_salt field.
-	invoiceDescEncryptedSalt := invoiceFields[11].Descriptor()
+	invoiceDescEncryptedSalt := invoiceFields[12].Descriptor()
 	// invoice.EncryptedSaltValidator is a validator for the "encrypted_salt" field. It is called by the builders before save.
 	invoice.EncryptedSaltValidator = invoiceDescEncryptedSalt.Validators[0].(func([]byte) error)
 	// invoiceDescID is the schema descriptor for id field.

@@ -34,6 +34,8 @@ type Invoice struct {
 	Deadline time.Time `json:"deadline,omitempty"`
 	// FillAt holds the value of the "fill_at" field.
 	FillAt *time.Time `json:"fill_at,omitempty"`
+	// LastCheckoutAt holds the value of the "last_checkout_at" field.
+	LastCheckoutAt *time.Time `json:"last_checkout_at,omitempty"`
 	// CancelAt holds the value of the "cancel_at" field.
 	CancelAt *time.Time `json:"cancel_at,omitempty"`
 	// WalletAddress holds the value of the "wallet_address" field.
@@ -52,7 +54,7 @@ func (*Invoice) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case invoice.FieldID, invoice.FieldRecipient, invoice.FieldBeneficiary, invoice.FieldAsset, invoice.FieldMetadata, invoice.FieldWalletAddress:
 			values[i] = new(sql.NullString)
-		case invoice.FieldCreateAt, invoice.FieldDeadline, invoice.FieldFillAt, invoice.FieldCancelAt:
+		case invoice.FieldCreateAt, invoice.FieldDeadline, invoice.FieldFillAt, invoice.FieldLastCheckoutAt, invoice.FieldCancelAt:
 			values[i] = new(sql.NullTime)
 		case invoice.FieldMinAmount:
 			values[i] = invoice.ValueScanner.MinAmount.ScanValue()
@@ -125,6 +127,13 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				i.FillAt = new(time.Time)
 				*i.FillAt = value.Time
+			}
+		case invoice.FieldLastCheckoutAt:
+			if value, ok := values[j].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_checkout_at", values[j])
+			} else if value.Valid {
+				i.LastCheckoutAt = new(time.Time)
+				*i.LastCheckoutAt = value.Time
 			}
 		case invoice.FieldCancelAt:
 			if value, ok := values[j].(*sql.NullTime); !ok {
@@ -204,6 +213,11 @@ func (i *Invoice) String() string {
 	builder.WriteString(", ")
 	if v := i.FillAt; v != nil {
 		builder.WriteString("fill_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := i.LastCheckoutAt; v != nil {
+		builder.WriteString("last_checkout_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")

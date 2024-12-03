@@ -14,7 +14,7 @@ service CPG {
   rpc CancelInvoice(CancelInvoiceInput) returns (google.protobuf.Empty);
   rpc GetInvoice(GetInvoiceInput) returns (GetInvoiceOutput);
   rpc CheckInvoice(CheckInvoiceInput) returns (CheckInvoiceOutput);
-  rpc TryCheckoutInvoice(TryCheckoutInvoiceInput) returns (google.protobuf.Empty);
+  rpc TryCheckoutInvoice(TryCheckoutInvoiceInput) returns (google.protobuf.Empty); //admin only
 }
 
 message PingInput {
@@ -91,11 +91,12 @@ message TryCheckoutInvoiceInput{
 }
 
 enum InvoiceStatus {
-  INVOICE_STATUS_UNSPECIFIED = 0;
+  INVOICE_STATUS_INVALID = 0;
   INVOICE_STATUS_PENDING = 1;
   INVOICE_STATUS_FILLED = 2;
   INVOICE_STATUS_CANCELED = 3;
   INVOICE_STATUS_EXPIRED = 4;
+  INVOICE_STATUS_CHECKOUT = 5;
 }
 
 message AssetInfo {
