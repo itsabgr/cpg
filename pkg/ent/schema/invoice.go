@@ -23,7 +23,7 @@ func (Invoice) Fields() []ent.Field {
 		field.Time("deadline").Immutable(),
 		field.Time("fill_at").Optional().Nillable(),
 		field.Time("cancel_at").Optional().Nillable(),
-		field.String("wallet_address").NotEmpty().Immutable(),
+		field.String("wallet_address").Unique().NotEmpty().Immutable(),
 		field.Bytes("encrypted_salt").Sensitive().Unique().NotEmpty().Immutable(),
 	}
 }

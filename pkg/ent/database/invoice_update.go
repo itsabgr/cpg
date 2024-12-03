@@ -13,7 +13,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // InvoiceUpdate is the builder for updating Invoice entities.
@@ -69,34 +68,6 @@ func (iu *InvoiceUpdate) ClearCancelAt() *InvoiceUpdate {
 	return iu
 }
 
-// SetLockExpireAt sets the "lock_expire_at" field.
-func (iu *InvoiceUpdate) SetLockExpireAt(t time.Time) *InvoiceUpdate {
-	iu.mutation.SetLockExpireAt(t)
-	return iu
-}
-
-// SetNillableLockExpireAt sets the "lock_expire_at" field if the given value is not nil.
-func (iu *InvoiceUpdate) SetNillableLockExpireAt(t *time.Time) *InvoiceUpdate {
-	if t != nil {
-		iu.SetLockExpireAt(*t)
-	}
-	return iu
-}
-
-// SetLockHolder sets the "lock_holder" field.
-func (iu *InvoiceUpdate) SetLockHolder(u uuid.UUID) *InvoiceUpdate {
-	iu.mutation.SetLockHolder(u)
-	return iu
-}
-
-// SetNillableLockHolder sets the "lock_holder" field if the given value is not nil.
-func (iu *InvoiceUpdate) SetNillableLockHolder(u *uuid.UUID) *InvoiceUpdate {
-	if u != nil {
-		iu.SetLockHolder(*u)
-	}
-	return iu
-}
-
 // Mutation returns the InvoiceMutation object of the builder.
 func (iu *InvoiceUpdate) Mutation() *InvoiceMutation {
 	return iu.mutation
@@ -149,12 +120,6 @@ func (iu *InvoiceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if iu.mutation.CancelAtCleared() {
 		_spec.ClearField(invoice.FieldCancelAt, field.TypeTime)
-	}
-	if value, ok := iu.mutation.LockExpireAt(); ok {
-		_spec.SetField(invoice.FieldLockExpireAt, field.TypeTime, value)
-	}
-	if value, ok := iu.mutation.LockHolder(); ok {
-		_spec.SetField(invoice.FieldLockHolder, field.TypeUUID, value)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -213,34 +178,6 @@ func (iuo *InvoiceUpdateOne) SetNillableCancelAt(t *time.Time) *InvoiceUpdateOne
 // ClearCancelAt clears the value of the "cancel_at" field.
 func (iuo *InvoiceUpdateOne) ClearCancelAt() *InvoiceUpdateOne {
 	iuo.mutation.ClearCancelAt()
-	return iuo
-}
-
-// SetLockExpireAt sets the "lock_expire_at" field.
-func (iuo *InvoiceUpdateOne) SetLockExpireAt(t time.Time) *InvoiceUpdateOne {
-	iuo.mutation.SetLockExpireAt(t)
-	return iuo
-}
-
-// SetNillableLockExpireAt sets the "lock_expire_at" field if the given value is not nil.
-func (iuo *InvoiceUpdateOne) SetNillableLockExpireAt(t *time.Time) *InvoiceUpdateOne {
-	if t != nil {
-		iuo.SetLockExpireAt(*t)
-	}
-	return iuo
-}
-
-// SetLockHolder sets the "lock_holder" field.
-func (iuo *InvoiceUpdateOne) SetLockHolder(u uuid.UUID) *InvoiceUpdateOne {
-	iuo.mutation.SetLockHolder(u)
-	return iuo
-}
-
-// SetNillableLockHolder sets the "lock_holder" field if the given value is not nil.
-func (iuo *InvoiceUpdateOne) SetNillableLockHolder(u *uuid.UUID) *InvoiceUpdateOne {
-	if u != nil {
-		iuo.SetLockHolder(*u)
-	}
 	return iuo
 }
 
@@ -326,12 +263,6 @@ func (iuo *InvoiceUpdateOne) sqlSave(ctx context.Context) (_node *Invoice, err e
 	}
 	if iuo.mutation.CancelAtCleared() {
 		_spec.ClearField(invoice.FieldCancelAt, field.TypeTime)
-	}
-	if value, ok := iuo.mutation.LockExpireAt(); ok {
-		_spec.SetField(invoice.FieldLockExpireAt, field.TypeTime, value)
-	}
-	if value, ok := iuo.mutation.LockHolder(); ok {
-		_spec.SetField(invoice.FieldLockHolder, field.TypeUUID, value)
 	}
 	_node = &Invoice{config: iuo.config}
 	_spec.Assign = _node.assignValues

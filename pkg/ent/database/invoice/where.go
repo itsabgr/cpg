@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
@@ -121,16 +120,6 @@ func WalletAddress(v string) predicate.Invoice {
 // EncryptedSalt applies equality check predicate on the "encrypted_salt" field. It's identical to EncryptedSaltEQ.
 func EncryptedSalt(v []byte) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldEncryptedSalt, v))
-}
-
-// LockExpireAt applies equality check predicate on the "lock_expire_at" field. It's identical to LockExpireAtEQ.
-func LockExpireAt(v time.Time) predicate.Invoice {
-	return predicate.Invoice(sql.FieldEQ(FieldLockExpireAt, v))
-}
-
-// LockHolder applies equality check predicate on the "lock_holder" field. It's identical to LockHolderEQ.
-func LockHolder(v uuid.UUID) predicate.Invoice {
-	return predicate.Invoice(sql.FieldEQ(FieldLockHolder, v))
 }
 
 // MinAmountEQ applies the EQ predicate on the "min_amount" field.
@@ -790,86 +779,6 @@ func EncryptedSaltLT(v []byte) predicate.Invoice {
 // EncryptedSaltLTE applies the LTE predicate on the "encrypted_salt" field.
 func EncryptedSaltLTE(v []byte) predicate.Invoice {
 	return predicate.Invoice(sql.FieldLTE(FieldEncryptedSalt, v))
-}
-
-// LockExpireAtEQ applies the EQ predicate on the "lock_expire_at" field.
-func LockExpireAtEQ(v time.Time) predicate.Invoice {
-	return predicate.Invoice(sql.FieldEQ(FieldLockExpireAt, v))
-}
-
-// LockExpireAtNEQ applies the NEQ predicate on the "lock_expire_at" field.
-func LockExpireAtNEQ(v time.Time) predicate.Invoice {
-	return predicate.Invoice(sql.FieldNEQ(FieldLockExpireAt, v))
-}
-
-// LockExpireAtIn applies the In predicate on the "lock_expire_at" field.
-func LockExpireAtIn(vs ...time.Time) predicate.Invoice {
-	return predicate.Invoice(sql.FieldIn(FieldLockExpireAt, vs...))
-}
-
-// LockExpireAtNotIn applies the NotIn predicate on the "lock_expire_at" field.
-func LockExpireAtNotIn(vs ...time.Time) predicate.Invoice {
-	return predicate.Invoice(sql.FieldNotIn(FieldLockExpireAt, vs...))
-}
-
-// LockExpireAtGT applies the GT predicate on the "lock_expire_at" field.
-func LockExpireAtGT(v time.Time) predicate.Invoice {
-	return predicate.Invoice(sql.FieldGT(FieldLockExpireAt, v))
-}
-
-// LockExpireAtGTE applies the GTE predicate on the "lock_expire_at" field.
-func LockExpireAtGTE(v time.Time) predicate.Invoice {
-	return predicate.Invoice(sql.FieldGTE(FieldLockExpireAt, v))
-}
-
-// LockExpireAtLT applies the LT predicate on the "lock_expire_at" field.
-func LockExpireAtLT(v time.Time) predicate.Invoice {
-	return predicate.Invoice(sql.FieldLT(FieldLockExpireAt, v))
-}
-
-// LockExpireAtLTE applies the LTE predicate on the "lock_expire_at" field.
-func LockExpireAtLTE(v time.Time) predicate.Invoice {
-	return predicate.Invoice(sql.FieldLTE(FieldLockExpireAt, v))
-}
-
-// LockHolderEQ applies the EQ predicate on the "lock_holder" field.
-func LockHolderEQ(v uuid.UUID) predicate.Invoice {
-	return predicate.Invoice(sql.FieldEQ(FieldLockHolder, v))
-}
-
-// LockHolderNEQ applies the NEQ predicate on the "lock_holder" field.
-func LockHolderNEQ(v uuid.UUID) predicate.Invoice {
-	return predicate.Invoice(sql.FieldNEQ(FieldLockHolder, v))
-}
-
-// LockHolderIn applies the In predicate on the "lock_holder" field.
-func LockHolderIn(vs ...uuid.UUID) predicate.Invoice {
-	return predicate.Invoice(sql.FieldIn(FieldLockHolder, vs...))
-}
-
-// LockHolderNotIn applies the NotIn predicate on the "lock_holder" field.
-func LockHolderNotIn(vs ...uuid.UUID) predicate.Invoice {
-	return predicate.Invoice(sql.FieldNotIn(FieldLockHolder, vs...))
-}
-
-// LockHolderGT applies the GT predicate on the "lock_holder" field.
-func LockHolderGT(v uuid.UUID) predicate.Invoice {
-	return predicate.Invoice(sql.FieldGT(FieldLockHolder, v))
-}
-
-// LockHolderGTE applies the GTE predicate on the "lock_holder" field.
-func LockHolderGTE(v uuid.UUID) predicate.Invoice {
-	return predicate.Invoice(sql.FieldGTE(FieldLockHolder, v))
-}
-
-// LockHolderLT applies the LT predicate on the "lock_holder" field.
-func LockHolderLT(v uuid.UUID) predicate.Invoice {
-	return predicate.Invoice(sql.FieldLT(FieldLockHolder, v))
-}
-
-// LockHolderLTE applies the LTE predicate on the "lock_holder" field.
-func LockHolderLTE(v uuid.UUID) predicate.Invoice {
-	return predicate.Invoice(sql.FieldLTE(FieldLockHolder, v))
 }
 
 // And groups predicates with the AND operator between them.

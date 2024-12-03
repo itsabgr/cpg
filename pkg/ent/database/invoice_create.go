@@ -12,7 +12,6 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // InvoiceCreate is the builder for creating a Invoice entity.
@@ -112,34 +111,6 @@ func (ic *InvoiceCreate) SetEncryptedSalt(b []byte) *InvoiceCreate {
 	return ic
 }
 
-// SetLockExpireAt sets the "lock_expire_at" field.
-func (ic *InvoiceCreate) SetLockExpireAt(t time.Time) *InvoiceCreate {
-	ic.mutation.SetLockExpireAt(t)
-	return ic
-}
-
-// SetNillableLockExpireAt sets the "lock_expire_at" field if the given value is not nil.
-func (ic *InvoiceCreate) SetNillableLockExpireAt(t *time.Time) *InvoiceCreate {
-	if t != nil {
-		ic.SetLockExpireAt(*t)
-	}
-	return ic
-}
-
-// SetLockHolder sets the "lock_holder" field.
-func (ic *InvoiceCreate) SetLockHolder(u uuid.UUID) *InvoiceCreate {
-	ic.mutation.SetLockHolder(u)
-	return ic
-}
-
-// SetNillableLockHolder sets the "lock_holder" field if the given value is not nil.
-func (ic *InvoiceCreate) SetNillableLockHolder(u *uuid.UUID) *InvoiceCreate {
-	if u != nil {
-		ic.SetLockHolder(*u)
-	}
-	return ic
-}
-
 // SetID sets the "id" field.
 func (ic *InvoiceCreate) SetID(s string) *InvoiceCreate {
 	ic.mutation.SetID(s)
@@ -184,14 +155,6 @@ func (ic *InvoiceCreate) defaults() {
 	if _, ok := ic.mutation.CreateAt(); !ok {
 		v := invoice.DefaultCreateAt()
 		ic.mutation.SetCreateAt(v)
-	}
-	if _, ok := ic.mutation.LockExpireAt(); !ok {
-		v := invoice.DefaultLockExpireAt()
-		ic.mutation.SetLockExpireAt(v)
-	}
-	if _, ok := ic.mutation.LockHolder(); !ok {
-		v := invoice.DefaultLockHolder()
-		ic.mutation.SetLockHolder(v)
 	}
 }
 
@@ -258,12 +221,6 @@ func (ic *InvoiceCreate) check() error {
 		if err := invoice.EncryptedSaltValidator(v); err != nil {
 			return &ValidationError{Name: "encrypted_salt", err: fmt.Errorf(`database: validator failed for field "Invoice.encrypted_salt": %w`, err)}
 		}
-	}
-	if _, ok := ic.mutation.LockExpireAt(); !ok {
-		return &ValidationError{Name: "lock_expire_at", err: errors.New(`database: missing required field "Invoice.lock_expire_at"`)}
-	}
-	if _, ok := ic.mutation.LockHolder(); !ok {
-		return &ValidationError{Name: "lock_holder", err: errors.New(`database: missing required field "Invoice.lock_holder"`)}
 	}
 	if v, ok := ic.mutation.ID(); ok {
 		if err := invoice.IDValidator(v); err != nil {
@@ -355,14 +312,6 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec, error) {
 	if value, ok := ic.mutation.EncryptedSalt(); ok {
 		_spec.SetField(invoice.FieldEncryptedSalt, field.TypeBytes, value)
 		_node.EncryptedSalt = value
-	}
-	if value, ok := ic.mutation.LockExpireAt(); ok {
-		_spec.SetField(invoice.FieldLockExpireAt, field.TypeTime, value)
-		_node.LockExpireAt = value
-	}
-	if value, ok := ic.mutation.LockHolder(); ok {
-		_spec.SetField(invoice.FieldLockHolder, field.TypeUUID, value)
-		_node.LockHolder = value
 	}
 	return _node, _spec, nil
 }

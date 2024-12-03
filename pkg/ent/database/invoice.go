@@ -11,7 +11,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 )
 
 // Invoice is the model entity for the Invoice schema.
@@ -41,11 +40,7 @@ type Invoice struct {
 	WalletAddress string `json:"wallet_address,omitempty"`
 	// EncryptedSalt holds the value of the "encrypted_salt" field.
 	EncryptedSalt []byte `json:"-"`
-	// LockExpireAt holds the value of the "lock_expire_at" field.
-	LockExpireAt time.Time `json:"lock_expire_at,omitempty"`
-	// LockHolder holds the value of the "lock_holder" field.
-	LockHolder   uuid.UUID `json:"lock_holder,omitempty"`
-	selectValues sql.SelectValues
+	selectValues  sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -57,10 +52,8 @@ func (*Invoice) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case invoice.FieldID, invoice.FieldRecipient, invoice.FieldBeneficiary, invoice.FieldAsset, invoice.FieldMetadata, invoice.FieldWalletAddress:
 			values[i] = new(sql.NullString)
-		case invoice.FieldCreateAt, invoice.FieldDeadline, invoice.FieldFillAt, invoice.FieldCancelAt, invoice.FieldLockExpireAt:
+		case invoice.FieldCreateAt, invoice.FieldDeadline, invoice.FieldFillAt, invoice.FieldCancelAt:
 			values[i] = new(sql.NullTime)
-		case invoice.FieldLockHolder:
-			values[i] = new(uuid.UUID)
 		case invoice.FieldMinAmount:
 			values[i] = invoice.ValueScanner.MinAmount.ScanValue()
 		default:
@@ -152,18 +145,6 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				i.EncryptedSalt = *value
 			}
-		case invoice.FieldLockExpireAt:
-			if value, ok := values[j].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field lock_expire_at", values[j])
-			} else if value.Valid {
-				i.LockExpireAt = value.Time
-			}
-		case invoice.FieldLockHolder:
-			if value, ok := values[j].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field lock_holder", values[j])
-			} else if value != nil {
-				i.LockHolder = *value
-			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
 		}
@@ -235,12 +216,6 @@ func (i *Invoice) String() string {
 	builder.WriteString(i.WalletAddress)
 	builder.WriteString(", ")
 	builder.WriteString("encrypted_salt=<sensitive>")
-	builder.WriteString(", ")
-	builder.WriteString("lock_expire_at=")
-	builder.WriteString(i.LockExpireAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("lock_holder=")
-	builder.WriteString(fmt.Sprintf("%v", i.LockHolder))
 	builder.WriteByte(')')
 	return builder.String()
 }

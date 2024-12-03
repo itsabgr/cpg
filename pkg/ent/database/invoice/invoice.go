@@ -8,7 +8,6 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 const (
@@ -38,10 +37,6 @@ const (
 	FieldWalletAddress = "wallet_address"
 	// FieldEncryptedSalt holds the string denoting the encrypted_salt field in the database.
 	FieldEncryptedSalt = "encrypted_salt"
-	// FieldLockExpireAt holds the string denoting the lock_expire_at field in the database.
-	FieldLockExpireAt = "lock_expire_at"
-	// FieldLockHolder holds the string denoting the lock_holder field in the database.
-	FieldLockHolder = "lock_holder"
 	// Table holds the table name of the invoice in the database.
 	Table = "invoices"
 )
@@ -60,8 +55,6 @@ var Columns = []string{
 	FieldCancelAt,
 	FieldWalletAddress,
 	FieldEncryptedSalt,
-	FieldLockExpireAt,
-	FieldLockHolder,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -91,10 +84,6 @@ var (
 	WalletAddressValidator func(string) error
 	// EncryptedSaltValidator is a validator for the "encrypted_salt" field. It is called by the builders before save.
 	EncryptedSaltValidator func([]byte) error
-	// DefaultLockExpireAt holds the default value on creation for the "lock_expire_at" field.
-	DefaultLockExpireAt func() time.Time
-	// DefaultLockHolder holds the default value on creation for the "lock_holder" field.
-	DefaultLockHolder func() uuid.UUID
 	// IDValidator is a validator for the "id" field. It is called by the builders before save.
 	IDValidator func(string) error
 	// ValueScanner of all Invoice fields.
@@ -159,14 +148,4 @@ func ByCancelAt(opts ...sql.OrderTermOption) OrderOption {
 // ByWalletAddress orders the results by the wallet_address field.
 func ByWalletAddress(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldWalletAddress, opts...).ToFunc()
-}
-
-// ByLockExpireAt orders the results by the lock_expire_at field.
-func ByLockExpireAt(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLockExpireAt, opts...).ToFunc()
-}
-
-// ByLockHolder orders the results by the lock_holder field.
-func ByLockHolder(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLockHolder, opts...).ToFunc()
 }

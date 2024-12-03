@@ -20,10 +20,8 @@ var (
 		{Name: "deadline", Type: field.TypeTime},
 		{Name: "fill_at", Type: field.TypeTime, Nullable: true},
 		{Name: "cancel_at", Type: field.TypeTime, Nullable: true},
-		{Name: "wallet_address", Type: field.TypeString},
+		{Name: "wallet_address", Type: field.TypeString, Unique: true},
 		{Name: "encrypted_salt", Type: field.TypeBytes, Unique: true},
-		{Name: "lock_expire_at", Type: field.TypeTime},
-		{Name: "lock_holder", Type: field.TypeUUID, Unique: true},
 	}
 	// InvoicesTable holds the schema information for the "invoices" table.
 	InvoicesTable = &schema.Table{

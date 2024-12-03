@@ -14,7 +14,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 )
 
 const (
@@ -46,8 +45,6 @@ type InvoiceMutation struct {
 	cancel_at      *time.Time
 	wallet_address *string
 	encrypted_salt *[]byte
-	lock_expire_at *time.Time
-	lock_holder    *uuid.UUID
 	clearedFields  map[string]struct{}
 	done           bool
 	oldValue       func(context.Context) (*Invoice, error)
@@ -580,78 +577,6 @@ func (m *InvoiceMutation) ResetEncryptedSalt() {
 	m.encrypted_salt = nil
 }
 
-// SetLockExpireAt sets the "lock_expire_at" field.
-func (m *InvoiceMutation) SetLockExpireAt(t time.Time) {
-	m.lock_expire_at = &t
-}
-
-// LockExpireAt returns the value of the "lock_expire_at" field in the mutation.
-func (m *InvoiceMutation) LockExpireAt() (r time.Time, exists bool) {
-	v := m.lock_expire_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldLockExpireAt returns the old "lock_expire_at" field's value of the Invoice entity.
-// If the Invoice object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *InvoiceMutation) OldLockExpireAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldLockExpireAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldLockExpireAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLockExpireAt: %w", err)
-	}
-	return oldValue.LockExpireAt, nil
-}
-
-// ResetLockExpireAt resets all changes to the "lock_expire_at" field.
-func (m *InvoiceMutation) ResetLockExpireAt() {
-	m.lock_expire_at = nil
-}
-
-// SetLockHolder sets the "lock_holder" field.
-func (m *InvoiceMutation) SetLockHolder(u uuid.UUID) {
-	m.lock_holder = &u
-}
-
-// LockHolder returns the value of the "lock_holder" field in the mutation.
-func (m *InvoiceMutation) LockHolder() (r uuid.UUID, exists bool) {
-	v := m.lock_holder
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldLockHolder returns the old "lock_holder" field's value of the Invoice entity.
-// If the Invoice object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *InvoiceMutation) OldLockHolder(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldLockHolder is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldLockHolder requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLockHolder: %w", err)
-	}
-	return oldValue.LockHolder, nil
-}
-
-// ResetLockHolder resets all changes to the "lock_holder" field.
-func (m *InvoiceMutation) ResetLockHolder() {
-	m.lock_holder = nil
-}
-
 // Where appends a list predicates to the InvoiceMutation builder.
 func (m *InvoiceMutation) Where(ps ...predicate.Invoice) {
 	m.predicates = append(m.predicates, ps...)
@@ -686,7 +611,7 @@ func (m *InvoiceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *InvoiceMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 11)
 	if m.min_amount != nil {
 		fields = append(fields, invoice.FieldMinAmount)
 	}
@@ -720,12 +645,6 @@ func (m *InvoiceMutation) Fields() []string {
 	if m.encrypted_salt != nil {
 		fields = append(fields, invoice.FieldEncryptedSalt)
 	}
-	if m.lock_expire_at != nil {
-		fields = append(fields, invoice.FieldLockExpireAt)
-	}
-	if m.lock_holder != nil {
-		fields = append(fields, invoice.FieldLockHolder)
-	}
 	return fields
 }
 
@@ -756,10 +675,6 @@ func (m *InvoiceMutation) Field(name string) (ent.Value, bool) {
 		return m.WalletAddress()
 	case invoice.FieldEncryptedSalt:
 		return m.EncryptedSalt()
-	case invoice.FieldLockExpireAt:
-		return m.LockExpireAt()
-	case invoice.FieldLockHolder:
-		return m.LockHolder()
 	}
 	return nil, false
 }
@@ -791,10 +706,6 @@ func (m *InvoiceMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldWalletAddress(ctx)
 	case invoice.FieldEncryptedSalt:
 		return m.OldEncryptedSalt(ctx)
-	case invoice.FieldLockExpireAt:
-		return m.OldLockExpireAt(ctx)
-	case invoice.FieldLockHolder:
-		return m.OldLockHolder(ctx)
 	}
 	return nil, fmt.Errorf("unknown Invoice field %s", name)
 }
@@ -880,20 +791,6 @@ func (m *InvoiceMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetEncryptedSalt(v)
-		return nil
-	case invoice.FieldLockExpireAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetLockExpireAt(v)
-		return nil
-	case invoice.FieldLockHolder:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetLockHolder(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Invoice field %s", name)
@@ -991,12 +888,6 @@ func (m *InvoiceMutation) ResetField(name string) error {
 		return nil
 	case invoice.FieldEncryptedSalt:
 		m.ResetEncryptedSalt()
-		return nil
-	case invoice.FieldLockExpireAt:
-		m.ResetLockExpireAt()
-		return nil
-	case invoice.FieldLockHolder:
-		m.ResetLockHolder()
 		return nil
 	}
 	return fmt.Errorf("unknown Invoice field %s", name)

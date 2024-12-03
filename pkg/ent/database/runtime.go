@@ -8,8 +8,6 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/google/uuid"
-
 	"entgo.io/ent/schema/field"
 )
 
@@ -52,14 +50,6 @@ func init() {
 	invoiceDescEncryptedSalt := invoiceFields[11].Descriptor()
 	// invoice.EncryptedSaltValidator is a validator for the "encrypted_salt" field. It is called by the builders before save.
 	invoice.EncryptedSaltValidator = invoiceDescEncryptedSalt.Validators[0].(func([]byte) error)
-	// invoiceDescLockExpireAt is the schema descriptor for lock_expire_at field.
-	invoiceDescLockExpireAt := invoiceFields[12].Descriptor()
-	// invoice.DefaultLockExpireAt holds the default value on creation for the lock_expire_at field.
-	invoice.DefaultLockExpireAt = invoiceDescLockExpireAt.Default.(func() time.Time)
-	// invoiceDescLockHolder is the schema descriptor for lock_holder field.
-	invoiceDescLockHolder := invoiceFields[13].Descriptor()
-	// invoice.DefaultLockHolder holds the default value on creation for the lock_holder field.
-	invoice.DefaultLockHolder = invoiceDescLockHolder.Default.(func() uuid.UUID)
 	// invoiceDescID is the schema descriptor for id field.
 	invoiceDescID := invoiceFields[0].Descriptor()
 	// invoice.IDValidator is a validator for the "id" field. It is called by the builders before save.
