@@ -35,14 +35,23 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CPGClient interface {
+	// Ping is used to check service health
 	Ping(ctx context.Context, in *PingInput, opts ...grpc.CallOption) (*PingOutput, error)
+	// ListAssets is used to get supported assets list
 	ListAssets(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListAssetsOutput, error)
+	// RecoverInvoice is used to recover lost but payed invoices
 	RecoverInvoice(ctx context.Context, in *RecoverInvoiceInput, opts ...grpc.CallOption) (*empty.Empty, error)
+	// CreateInvoice creates a new invoice with custom metadata attached to it and an assigned random uuid
 	CreateInvoice(ctx context.Context, in *CreateInvoiceInput, opts ...grpc.CallOption) (*CreateInvoiceOutput, error)
+	// CancelInvoice cancel a pending invoice that is not filled, expired and checked out or already canceled
 	CancelInvoice(ctx context.Context, in *CancelInvoiceInput, opts ...grpc.CallOption) (*empty.Empty, error)
+	// GetInvoice returns an invoice info and status by its id
 	GetInvoice(ctx context.Context, in *GetInvoiceInput, opts ...grpc.CallOption) (*GetInvoiceOutput, error)
+	// CheckInvoice check a pending invoice balance and make it filled if it reaches the required min amount
 	CheckInvoice(ctx context.Context, in *CheckInvoiceInput, opts ...grpc.CallOption) (*CheckInvoiceOutput, error)
+	// TryCheckoutInvoice try to checkout an invoice only if its not pending, it may take tool long and should be used async by admin
 	TryCheckoutInvoice(ctx context.Context, in *TryCheckoutInvoiceInput, opts ...grpc.CallOption) (*empty.Empty, error)
+	// RequestCheckout set a non-pending invoice to too check out as soon as possible
 	RequestCheckout(ctx context.Context, in *RequestCheckoutInput, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
@@ -148,14 +157,23 @@ func (c *cPGClient) RequestCheckout(ctx context.Context, in *RequestCheckoutInpu
 // All implementations must embed UnimplementedCPGServer
 // for forward compatibility.
 type CPGServer interface {
+	// Ping is used to check service health
 	Ping(context.Context, *PingInput) (*PingOutput, error)
+	// ListAssets is used to get supported assets list
 	ListAssets(context.Context, *empty.Empty) (*ListAssetsOutput, error)
+	// RecoverInvoice is used to recover lost but payed invoices
 	RecoverInvoice(context.Context, *RecoverInvoiceInput) (*empty.Empty, error)
+	// CreateInvoice creates a new invoice with custom metadata attached to it and an assigned random uuid
 	CreateInvoice(context.Context, *CreateInvoiceInput) (*CreateInvoiceOutput, error)
+	// CancelInvoice cancel a pending invoice that is not filled, expired and checked out or already canceled
 	CancelInvoice(context.Context, *CancelInvoiceInput) (*empty.Empty, error)
+	// GetInvoice returns an invoice info and status by its id
 	GetInvoice(context.Context, *GetInvoiceInput) (*GetInvoiceOutput, error)
+	// CheckInvoice check a pending invoice balance and make it filled if it reaches the required min amount
 	CheckInvoice(context.Context, *CheckInvoiceInput) (*CheckInvoiceOutput, error)
+	// TryCheckoutInvoice try to checkout an invoice only if its not pending, it may take tool long and should be used async by admin
 	TryCheckoutInvoice(context.Context, *TryCheckoutInvoiceInput) (*empty.Empty, error)
+	// RequestCheckout set a non-pending invoice to too check out as soon as possible
 	RequestCheckout(context.Context, *RequestCheckoutInput) (*empty.Empty, error)
 	mustEmbedUnimplementedCPGServer()
 }

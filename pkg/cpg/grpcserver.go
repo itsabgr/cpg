@@ -42,11 +42,9 @@ func NewGRPCServer(cpg *CPG, rateLimit *ratelimit.RateLimit) proto.CPGServer {
 
 func (serv grpcServer) Ping(ctx context.Context, input *proto.PingInput) (*proto.PingOutput, error) {
 
-	txt := input.GetText()
-
 	return &proto.PingOutput{
 		Now:  timestamppb.Now(),
-		Text: txt,
+		Pong: input.GetPing(),
 	}, nil
 
 }
@@ -204,8 +202,7 @@ func (serv grpcServer) TryCheckoutInvoice(ctx context.Context, input *proto.TryC
 	defer cancel()
 
 	err = serv.cpg.TryCheckoutInvoice(ctx, TryCheckoutInvoiceParams{
-		InvoiceID:    input.GetInvoiceId(),
-		CheckBalance: input.GetCheckBalance(),
+		InvoiceID: input.GetInvoiceId(),
 	})
 
 	if err != nil {

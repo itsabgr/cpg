@@ -5,6 +5,7 @@ import (
 	"cpg/pkg/crypto"
 	"github.com/google/uuid"
 	"github.com/itsabgr/ge"
+	"log/slog"
 	"math/big"
 	"sync"
 	"time"
@@ -114,7 +115,7 @@ func (cpg *CPG) CreateInvoice(ctx context.Context, params CreateInvoiceParams) (
 	}
 	assetProvider := cpg.assets.Get(params.AssetName)
 	if assetProvider == nil {
-		err = ge.New("asset not found")
+		err = ge.New("asset is not supported")
 		return result, err
 	}
 
@@ -305,93 +306,99 @@ type CheckInvoiceResult struct {
 }
 
 func (cpg *CPG) CheckInvoice(ctx context.Context, params CheckInvoiceParams) (result CheckInvoiceResult, err error) {
-	inv, _, err := cpg.checkInvoice(ctx, params.InvoiceID, params.WalletAddress, true)
-
+	inv, err := cpg.db.GetInvoice(ctx, params.InvoiceID, params.WalletAddress, true)
 	if err != nil {
-		return result, err
+		return result, ge.Wrap(ge.New("failed to get invoice"), err)
+	}
+	if inv == nil {
+		return result, ge.New("invoice not found")
 	}
 
-	result.InvoiceStatus = inv.Status()
+	asset := cpg.assets.Get(inv.Asset)
+	if asset == nil {
+		return result, ge.New("asset is not supported")
+	}
 
-	return
+	switch result.InvoiceStatus = inv.Status(); result.InvoiceStatus {
+
+	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled, InvoiceStatusCheckout:
+
+		return result, nil
+
+	case InvoiceStatusPending:
+
+		inv.saltKeyring = cpg.saltKeyring
+
+		invoiceBalance, err := asset.GetBalance(ctx, inv)
+		if err != nil {
+			return result, ge.Wrap(ge.New("failed to get invoice balance"), err)
+		}
+
+		if invoiceBalance.Cmp(&inv.MinAmount) < 0 {
+			return result, nil
+		}
+
+		if err = cpg.db.SetInvoiceFillAt(ctx, inv.ID, time.Now()); err != nil {
+			return result, ge.Wrap(ge.New("failed to update invoice fill_at"), err)
+		}
+
+		return result, nil
+
+	default:
+		return result, ErrInvalidInvoiceStatus
+	}
 }
 
 type TryCheckoutInvoiceParams struct {
-	InvoiceID    string
-	CheckBalance bool
+	InvoiceID string
 }
 
 func (cpg *CPG) TryCheckoutInvoice(ctx context.Context, params TryCheckoutInvoiceParams) (err error) {
 
-	inv, asset, err := cpg.checkInvoice(ctx, params.InvoiceID, "", params.CheckBalance)
+	inv, err := cpg.db.GetInvoice(ctx, params.InvoiceID, "", true)
 
 	if err != nil {
-		return err
+		return ge.Wrap(ge.New("failed to get invoice"), err)
 	}
 
-	switch inv.Status() {
-	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled, InvoiceStatusCheckout:
+	if inv == nil {
+		return ge.New("invoice not found")
+	}
+
+	if inv.CheckoutRequestAt == nil {
+		return ge.New("invoice not requested to checkout")
+	}
+
+	if false == inv.CheckoutRequestAt.Before(time.Now()) {
+		return ge.New("invoice is already checking out")
+	}
+
+	asset := cpg.assets.Get(inv.Asset)
+	if asset == nil {
+		return ge.New("asset is not supported")
+	}
+
+	switch invoiceStatus := inv.Status(); invoiceStatus {
+
 	case InvoiceStatusPending:
-		return ge.New("invoice is pending to fill")
+
+		return ge.New("invoice status is pending")
+
+	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled, InvoiceStatusCheckout:
+
+		inv.saltKeyring = cpg.saltKeyring
+
+		if err = asset.TryFlush(ctx, inv); err != nil {
+			return ge.Wrap(ge.New("failed to flush invoice"), err)
+		}
+
+		if err = cpg.db.SetInvoiceLastCheckoutAt(ctx, inv.ID, time.Now()); err != nil {
+			slog.Warn("failed to update invoice last_checkout_at", slog.String("invoice", inv.ID), slog.String("error", err.Error()))
+		}
+
+		return nil
+
 	default:
 		return ErrInvalidInvoiceStatus
-
 	}
-
-	inv.saltKeyring = cpg.saltKeyring
-	if err = asset.TryFlush(ctx, inv); err != nil {
-		return ge.Wrap(ge.New("failed to flush invoice"), err)
-	}
-
-	_ = cpg.db.SetInvoiceLastCheckoutAt(ctx, inv.ID, time.Now())
-
-	return nil
-}
-
-func (cpg *CPG) checkInvoice(ctx context.Context, invoiceID, walletAddress string, getBalance bool) (inv *Invoice, assetProvider Asset, err error) {
-	inv, err = cpg.db.GetInvoice(ctx, invoiceID, walletAddress, getBalance)
-	if err != nil {
-		err = ge.Wrap(ge.New("failed to get invoice"), err)
-		return nil, nil, err
-	}
-	if inv == nil {
-		err = ge.New("invoice not found")
-		return nil, nil, err
-	}
-
-	assetProvider = cpg.assets.Get(inv.Asset)
-	if assetProvider == nil {
-		err = ge.New("asset is not supported no more")
-		return nil, nil, err
-	}
-
-	switch inv.Status() {
-	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled, InvoiceStatusCheckout:
-	case InvoiceStatusPending:
-		if getBalance {
-			inv.saltKeyring = cpg.saltKeyring
-			var invoiceBalance *big.Int
-			invoiceBalance, err = assetProvider.GetBalance(ctx, inv)
-			if err != nil {
-				err = ge.Wrap(ge.New("failed to get invoice balance"), err)
-				return
-			}
-			if invoiceBalance.Cmp(&inv.MinAmount) < 0 {
-				err = ge.Detail(ge.New("insufficient wallet balance"), ge.D{"balance": invoiceBalance.String()})
-				return
-			}
-			now := time.Now()
-			if err = cpg.db.SetInvoiceFillAt(ctx, inv.ID, now); err != nil {
-				err = ge.Wrap(ge.New("failed to update invoice fill_at"), err)
-				return
-			}
-			inv.FillAt = &now
-		} else {
-			err = ge.New("invoice is pending to fill")
-			return nil, nil, err
-		}
-	default:
-		return nil, nil, ErrInvalidInvoiceStatus
-	}
-	return inv, assetProvider, nil
 }

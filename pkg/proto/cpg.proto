@@ -7,24 +7,43 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
 service CPG {
+
+  //Ping is used to check service health
   rpc Ping(PingInput) returns (PingOutput); // for health check
+
+  //ListAssets is used to get supported assets list
   rpc ListAssets(google.protobuf.Empty) returns (ListAssetsOutput);
+
+  //RecoverInvoice is used to recover lost but payed invoices
   rpc RecoverInvoice(RecoverInvoiceInput) returns (google.protobuf.Empty); // use captcha
+
+  //CreateInvoice creates a new invoice with custom metadata attached to it and an assigned random uuid
   rpc CreateInvoice(CreateInvoiceInput) returns (CreateInvoiceOutput); // use captcha
+
+  // CancelInvoice cancel a pending invoice that is not filled, expired and checked out or already canceled
   rpc CancelInvoice(CancelInvoiceInput) returns (google.protobuf.Empty); // must authenticate user
+
+  //GetInvoice returns an invoice info and status by its id
   rpc GetInvoice(GetInvoiceInput) returns (GetInvoiceOutput); // should authenticate user
+
+  //CheckInvoice check a pending invoice balance and make it filled if it reaches the required min amount
   rpc CheckInvoice(CheckInvoiceInput) returns (CheckInvoiceOutput); // should authenticate user, also CEB can use it to notify updates
-  rpc TryCheckoutInvoice(TryCheckoutInvoiceInput) returns (google.protobuf.Empty); // admin only, may too long blocking call
+
+  //RequestCheckout set a non-pending invoice to too check out as soon as possible
   rpc RequestCheckout(RequestCheckoutInput) returns (google.protobuf.Empty); // must authenticate user
+
+  //TryCheckoutInvoice try to checkout an invoice only if its not pending, it may take tool long and should be used async by admin
+  rpc TryCheckoutInvoice(TryCheckoutInvoiceInput) returns (google.protobuf.Empty); // admin only, may too long blocking call
+
 }
 
 message PingInput {
-  string text = 1;
+  string ping = 1;
 }
 
 message PingOutput {
-  google.protobuf.Timestamp now = 1;
-  string text = 2;
+  string pong = 1;
+  google.protobuf.Timestamp now = 2;
 }
 
 message ListAssetsOutput{
@@ -90,8 +109,6 @@ message CheckInvoiceOutput {
 
 message TryCheckoutInvoiceInput{
   string invoice_id = 1;
-  bool check_balance = 2;
-  bool with_no_checkout_request = 3;
 }
 
 message RequestCheckoutInput{
