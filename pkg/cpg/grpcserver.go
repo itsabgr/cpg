@@ -116,7 +116,8 @@ func (serv grpcServer) CancelInvoice(ctx context.Context, input *proto.CancelInv
 	defer cancel()
 
 	err = serv.cpg.CancelInvoice(ctx, CancelInvoiceParams{
-		InvoiceID: input.GetInvoiceId(),
+		InvoiceID:     input.GetInvoiceId(),
+		WalletAddress: input.GetWalletAddress(),
 	})
 	if err != nil {
 		return nil, err
@@ -160,7 +161,8 @@ func (serv grpcServer) CheckInvoice(ctx context.Context, input *proto.CheckInvoi
 	defer cancel()
 
 	result, err := serv.cpg.CheckInvoice(ctx, CheckInvoiceParams{
-		InvoiceID: input.GetInvoiceId(),
+		InvoiceID:     input.GetInvoiceId(),
+		WalletAddress: input.GetWalletAddress(),
 	})
 	if err != nil {
 		return nil, err

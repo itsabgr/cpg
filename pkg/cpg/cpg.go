@@ -154,12 +154,22 @@ func randomEncryptedSalt(saltKeyring *crypto.KeyRing, saltLength int) []byte {
 }
 
 type CancelInvoiceParams struct {
-	InvoiceID string
+	InvoiceID     string
+	WalletAddress string
 }
 
 func (cpg *CPG) CancelInvoice(ctx context.Context, params CancelInvoiceParams) (err error) {
+
+	if params.InvoiceID == "" {
+		return ge.New("invoice id is empty")
+	}
+
+	if params.WalletAddress == "" {
+		return ge.New("wallet address is empty")
+	}
+
 	var inv *Invoice
-	inv, err = cpg.db.GetInvoice(ctx, params.InvoiceID, false)
+	inv, err = cpg.db.GetInvoice(ctx, params.InvoiceID, params.WalletAddress, false)
 	if err != nil {
 		err = ge.Wrap(ge.New("failed to get invoice"), err)
 		return err
@@ -208,7 +218,12 @@ type GetInvoiceResult struct {
 }
 
 func (cpg *CPG) GetInvoice(ctx context.Context, params GetInvoiceParams) (result GetInvoiceResult, err error) {
-	inv, err := cpg.db.GetInvoice(ctx, params.InvoiceID, false)
+
+	if params.InvoiceID == "" {
+		return result, ge.New("invoice id is empty")
+	}
+
+	inv, err := cpg.db.GetInvoice(ctx, params.InvoiceID, "", false)
 	if err != nil {
 		err = ge.Wrap(ge.New("failed to get invoice"), err)
 		return
@@ -236,7 +251,8 @@ func (cpg *CPG) GetInvoice(ctx context.Context, params GetInvoiceParams) (result
 }
 
 type CheckInvoiceParams struct {
-	InvoiceID string
+	InvoiceID     string
+	WalletAddress string
 }
 
 type CheckInvoiceResult struct {
@@ -244,7 +260,7 @@ type CheckInvoiceResult struct {
 }
 
 func (cpg *CPG) CheckInvoice(ctx context.Context, params CheckInvoiceParams) (result CheckInvoiceResult, err error) {
-	inv, _, err := cpg.checkInvoice(ctx, params.InvoiceID, true)
+	inv, _, err := cpg.checkInvoice(ctx, params.InvoiceID, params.WalletAddress, true)
 
 	if err != nil {
 		return result, err
@@ -262,7 +278,7 @@ type TryCheckoutInvoiceParams struct {
 
 func (cpg *CPG) TryCheckoutInvoice(ctx context.Context, params TryCheckoutInvoiceParams) (err error) {
 
-	inv, asset, err := cpg.checkInvoice(ctx, params.InvoiceID, params.CheckBalance)
+	inv, asset, err := cpg.checkInvoice(ctx, params.InvoiceID, "", params.CheckBalance)
 
 	if err != nil {
 		return err
@@ -286,8 +302,8 @@ func (cpg *CPG) TryCheckoutInvoice(ctx context.Context, params TryCheckoutInvoic
 	return nil
 }
 
-func (cpg *CPG) checkInvoice(ctx context.Context, id string, getBalance bool) (inv *Invoice, assetProvider Asset, err error) {
-	inv, err = cpg.db.GetInvoice(ctx, id, true)
+func (cpg *CPG) checkInvoice(ctx context.Context, invoiceID, walletAddress string, getBalance bool) (inv *Invoice, assetProvider Asset, err error) {
+	inv, err = cpg.db.GetInvoice(ctx, invoiceID, walletAddress, true)
 	if err != nil {
 		err = ge.Wrap(ge.New("failed to get invoice"), err)
 		return nil, nil, err

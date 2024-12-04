@@ -9,11 +9,11 @@ import "google/protobuf/duration.proto";
 service CPG {
   rpc Ping(PingInput) returns (PingOutput);
   rpc ListAssets(google.protobuf.Empty) returns (ListAssetsOutput);
-  rpc RecoverInvoice(RecoverInvoiceInput) returns (google.protobuf.Empty);
-  rpc CreateInvoice(CreateInvoiceInput) returns (CreateInvoiceOutput);
-  rpc CancelInvoice(CancelInvoiceInput) returns (google.protobuf.Empty);
+  rpc RecoverInvoice(RecoverInvoiceInput) returns (google.protobuf.Empty); // use captcha
+  rpc CreateInvoice(CreateInvoiceInput) returns (CreateInvoiceOutput); // use captcha
+  rpc CancelInvoice(CancelInvoiceInput) returns (google.protobuf.Empty); // must authenticate user
   rpc GetInvoice(GetInvoiceInput) returns (GetInvoiceOutput);
-  rpc CheckInvoice(CheckInvoiceInput) returns (CheckInvoiceOutput);
+  rpc CheckInvoice(CheckInvoiceInput) returns (CheckInvoiceOutput); // for CEB
   rpc TryCheckoutInvoice(TryCheckoutInvoiceInput) returns (google.protobuf.Empty); //admin only
 }
 
@@ -57,6 +57,7 @@ message CreateInvoiceOutput {
 
 message CancelInvoiceInput {
   string invoice_id = 1;
+  string wallet_address = 2;
 }
 
 message GetInvoiceInput {
@@ -79,6 +80,7 @@ message GetInvoiceOutput {
 
 message CheckInvoiceInput {
   string invoice_id = 1;
+  string wallet_address = 2;
 }
 
 message CheckInvoiceOutput {

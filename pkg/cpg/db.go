@@ -4,6 +4,7 @@ import (
 	"context"
 	"cpg/pkg/ent/database"
 	"cpg/pkg/ent/database/invoice"
+	"cpg/pkg/ent/database/predicate"
 	"github.com/itsabgr/ge"
 	"time"
 )
@@ -95,7 +96,7 @@ func (db *DB) InsertInvoice(ctx context.Context, inv *Invoice, recovered bool) e
 		Exec(ctx)
 }
 
-func (db *DB) GetInvoice(ctx context.Context, id string, withSalt bool) (*Invoice, error) {
+func (db *DB) GetInvoice(ctx context.Context, id, walletAddress string, withSalt bool) (*Invoice, error) {
 	fields := []string{
 		invoice.FieldMinAmount,
 		invoice.FieldRecipient,
@@ -113,7 +114,21 @@ func (db *DB) GetInvoice(ctx context.Context, id string, withSalt bool) (*Invoic
 		fields = append(fields, invoice.FieldEncryptedSalt)
 	}
 
-	found, err := db.client.Invoice.Query().Where(invoice.ID(id)).Select(fields...).Only(ctx)
+	where := make([]predicate.Invoice, 2)
+
+	if id != "" {
+		where = append(where, invoice.WalletAddress(id))
+	}
+
+	if walletAddress != "" {
+		where = append(where, invoice.WalletAddress(walletAddress))
+	}
+
+	if len(where) <= 0 {
+		return nil, ge.New("no invoice id or wallet address")
+	}
+
+	found, err := db.client.Invoice.Query().Where(where...).Select(fields...).Only(ctx)
 	if err != nil {
 		if database.IsNotFound(err) {
 			return nil, nil
