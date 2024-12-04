@@ -175,7 +175,7 @@ func (cpg *CPG) RequestCheckout(ctx context.Context, params RequestCheckoutParam
 	}
 
 	if inv.CheckoutRequestAt != nil {
-
+		return ge.New("already requested to checkout")
 	}
 
 	invoiceStatus := inv.Status()
