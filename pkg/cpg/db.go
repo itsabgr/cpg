@@ -14,8 +14,6 @@ type DB struct {
 	lockTTL time.Duration
 }
 
-var ErrInvoiceNotUpdate = ge.New("invoice did not update")
-
 func NewDB(client *database.Client) *DB {
 	return &DB{
 		client:  client,
@@ -30,15 +28,15 @@ func (db *DB) SetInvoiceCancelAt(ctx context.Context, id string, at time.Time) e
 		invoice.LastCheckoutAtIsNil(),
 		invoice.CancelAtIsNil(),
 	).SetCancelAt(at).Save(ctx)
+
+	if inv == nil || (err != nil && database.IsNotFound(err)) {
+		return ge.New("invoice not found or can not cancel")
+	}
+
 	if err != nil {
-		if database.IsNotFound(err) {
-			return ErrInvoiceNotUpdate
-		}
 		return err
 	}
-	if inv == nil {
-		return ErrInvoiceNotUpdate
-	}
+
 	return nil
 }
 
@@ -49,15 +47,15 @@ func (db *DB) SetInvoiceFillAt(ctx context.Context, id string, at time.Time) err
 		invoice.LastCheckoutAtIsNil(),
 		invoice.CancelAtIsNil(),
 	).SetFillAt(at).Save(ctx)
+
+	if inv == nil || (err != nil && database.IsNotFound(err)) {
+		return ge.New("invoice not found or can not fill")
+	}
+
 	if err != nil {
-		if database.IsNotFound(err) {
-			return ErrInvoiceNotUpdate
-		}
 		return err
 	}
-	if inv == nil {
-		return ErrInvoiceNotUpdate
-	}
+
 	return nil
 }
 
@@ -69,15 +67,15 @@ func (db *DB) SetInvoiceLastCheckoutAt(ctx context.Context, id string, at time.T
 			invoice.CancelAtNotNil(),
 		),
 	).SetLastCheckoutAt(at).Save(ctx)
+
+	if inv == nil || (err != nil && database.IsNotFound(err)) {
+		return ge.New("invoice not found or can not checkout")
+	}
+
 	if err != nil {
-		if database.IsNotFound(err) {
-			return ErrInvoiceNotUpdate
-		}
 		return err
 	}
-	if inv == nil {
-		return ErrInvoiceNotUpdate
-	}
+
 	return nil
 }
 
