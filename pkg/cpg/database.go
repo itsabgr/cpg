@@ -79,15 +79,44 @@ func (db *DB) SetInvoiceLastCheckoutAt(ctx context.Context, id string, at time.T
 
 func (db *DB) SetInvoiceCheckoutRequestAt(ctx context.Context, id string, at time.Time) error {
 	inv, err := db.client.Invoice.UpdateOneID(id).Where(
-		invoice.Or(
-			invoice.DeadlineLT(time.Now()),
-			invoice.FillAtNotNil(),
-			invoice.CancelAtNotNil(),
+		invoice.And(
+			invoice.CheckoutRequestAtIsNil(),
+			invoice.Or(
+				invoice.DeadlineLT(time.Now()),
+				invoice.FillAtNotNil(),
+				invoice.CancelAtNotNil(),
+			),
 		),
 	).SetCheckoutRequestAt(at).Save(ctx)
 
 	if inv == nil || (err != nil && database.IsNotFound(err)) {
-		return ge.New("invoice not found or can not checkout")
+		return ge.New("invoice not found or can not checkout or already requested to checkout")
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *DB) DoneInvoiceCheckoutRequestAt(ctx context.Context, id string) error {
+	inv, err := db.client.Invoice.UpdateOneID(id).Where(
+		invoice.And(
+			invoice.Or(
+				invoice.CheckoutRequestAtNotNil(),
+				invoice.CheckoutRequestAtLT(time.Now()),
+			),
+			invoice.Or(
+				invoice.DeadlineLT(time.Now()),
+				invoice.FillAtNotNil(),
+				invoice.CancelAtNotNil(),
+			),
+		),
+	).ClearCheckoutRequestAt().Save(ctx)
+
+	if inv == nil || (err != nil && database.IsNotFound(err)) {
+		return ge.New("invoice not found or can not checkout or already not requested to checkout")
 	}
 
 	if err != nil {
@@ -123,6 +152,7 @@ func (db *DB) GetInvoice(ctx context.Context, id, walletAddress string, withSalt
 		invoice.FieldDeadline,
 		invoice.FieldFillAt,
 		invoice.FieldLastCheckoutAt,
+		invoice.FieldCheckoutRequestAt,
 		invoice.FieldCancelAt,
 		invoice.FieldWalletAddress,
 	}
@@ -152,19 +182,20 @@ func (db *DB) GetInvoice(ctx context.Context, id, walletAddress string, withSalt
 		return nil, err
 	}
 	inv := &Invoice{
-		ID:             id,
-		MinAmount:      *found.MinAmount,
-		Recipient:      found.Recipient,
-		Beneficiary:    found.Beneficiary,
-		Asset:          found.Asset,
-		Metadata:       found.Metadata,
-		CreateAt:       found.CreateAt,
-		Deadline:       found.Deadline,
-		FillAt:         found.FillAt,
-		LastCheckoutAt: found.LastCheckoutAt,
-		CancelAt:       found.CancelAt,
-		WalletAddress:  found.WalletAddress,
-		EncryptedSalt:  found.EncryptedSalt,
+		ID:                id,
+		MinAmount:         *found.MinAmount,
+		Recipient:         found.Recipient,
+		Beneficiary:       found.Beneficiary,
+		Asset:             found.Asset,
+		Metadata:          found.Metadata,
+		CreateAt:          found.CreateAt,
+		Deadline:          found.Deadline,
+		FillAt:            found.FillAt,
+		LastCheckoutAt:    found.LastCheckoutAt,
+		CheckoutRequestAt: found.CheckoutRequestAt,
+		CancelAt:          found.CancelAt,
+		WalletAddress:     found.WalletAddress,
+		EncryptedSalt:     found.EncryptedSalt,
 	}
 
 	return inv, nil

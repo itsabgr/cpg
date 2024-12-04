@@ -72,6 +72,8 @@ message GetInvoiceOutput {
   google.protobuf.Timestamp deadline = 7;
   optional  google.protobuf.Timestamp fill_at = 8;
   optional  google.protobuf.Timestamp cancel_at = 9;
+  optional  google.protobuf.Timestamp last_checkout_at = 14;
+  optional  google.protobuf.Timestamp checkout_request_at = 15;
   string wallet_address = 10;
   InvoiceStatus status = 11;
   string metadata = 12;

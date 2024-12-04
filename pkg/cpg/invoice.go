@@ -25,21 +25,22 @@ const (
 var ErrInvalidInvoiceStatus = ge.New("invoice has invalid status")
 
 type Invoice struct {
-	_              sync.Mutex
-	ID             string
-	MinAmount      big.Int
-	Recipient      string
-	Beneficiary    string
-	Asset          string
-	Metadata       string
-	CreateAt       time.Time
-	Deadline       time.Time
-	FillAt         *time.Time
-	LastCheckoutAt *time.Time
-	CancelAt       *time.Time
-	WalletAddress  string
-	EncryptedSalt  []byte
-	saltKeyring    *crypto.KeyRing
+	_                 sync.Mutex
+	ID                string
+	MinAmount         big.Int
+	Recipient         string
+	Beneficiary       string
+	Asset             string
+	Metadata          string
+	CreateAt          time.Time
+	Deadline          time.Time
+	FillAt            *time.Time
+	LastCheckoutAt    *time.Time
+	CheckoutRequestAt *time.Time
+	CancelAt          *time.Time
+	WalletAddress     string
+	EncryptedSalt     []byte
+	saltKeyring       *crypto.KeyRing
 }
 
 func (inv *Invoice) DecryptSalt() []byte {

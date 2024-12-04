@@ -174,6 +174,10 @@ func (cpg *CPG) RequestCheckout(ctx context.Context, params RequestCheckoutParam
 		return err
 	}
 
+	if inv.CheckoutRequestAt != nil {
+
+	}
+
 	invoiceStatus := inv.Status()
 
 	switch invoiceStatus {
@@ -243,17 +247,19 @@ type GetInvoiceParams struct {
 }
 
 type GetInvoiceResult struct {
-	MinAmount     big.Int
-	Recipient     string
-	Beneficiary   string
-	Asset         string
-	Metadata      string
-	CreateAt      time.Time
-	Deadline      time.Time
-	FillAt        *time.Time
-	CancelAt      *time.Time
-	WalletAddress string
-	Status        InvoiceStatus
+	MinAmount         big.Int
+	Recipient         string
+	Beneficiary       string
+	Asset             string
+	Metadata          string
+	CreateAt          time.Time
+	Deadline          time.Time
+	FillAt            *time.Time
+	CancelAt          *time.Time
+	LastCheckoutAt    *time.Time
+	CheckoutRequestAt *time.Time
+	WalletAddress     string
+	Status            InvoiceStatus
 }
 
 func (cpg *CPG) GetInvoice(ctx context.Context, params GetInvoiceParams) (result GetInvoiceResult, err error) {
@@ -273,17 +279,19 @@ func (cpg *CPG) GetInvoice(ctx context.Context, params GetInvoiceParams) (result
 	}
 
 	result = GetInvoiceResult{
-		MinAmount:     inv.MinAmount,
-		Recipient:     inv.Recipient,
-		Beneficiary:   inv.Beneficiary,
-		Asset:         inv.Asset,
-		Metadata:      inv.Metadata,
-		CreateAt:      inv.CreateAt,
-		Deadline:      inv.Deadline,
-		FillAt:        inv.FillAt,
-		CancelAt:      inv.CancelAt,
-		WalletAddress: inv.WalletAddress,
-		Status:        inv.Status(),
+		MinAmount:         inv.MinAmount,
+		Recipient:         inv.Recipient,
+		Beneficiary:       inv.Beneficiary,
+		Asset:             inv.Asset,
+		Metadata:          inv.Metadata,
+		CreateAt:          inv.CreateAt,
+		Deadline:          inv.Deadline,
+		FillAt:            inv.FillAt,
+		CancelAt:          inv.CancelAt,
+		LastCheckoutAt:    inv.LastCheckoutAt,
+		CheckoutRequestAt: inv.CheckoutRequestAt,
+		WalletAddress:     inv.WalletAddress,
+		Status:            inv.Status(),
 	}
 
 	return

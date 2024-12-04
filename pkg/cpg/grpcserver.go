@@ -156,17 +156,19 @@ func (serv grpcServer) GetInvoice(ctx context.Context, input *proto.GetInvoiceIn
 	}
 
 	return &proto.GetInvoiceOutput{
-		MinAmount:     result.MinAmount.Text(10),
-		Recipient:     result.Recipient,
-		Beneficiary:   result.Beneficiary,
-		Asset:         result.Asset,
-		Metadata:      result.Metadata,
-		CreateAt:      timestamppb.New(result.CreateAt),
-		Deadline:      timestamppb.New(result.Deadline),
-		FillAt:        optionalTime2timestamp(result.FillAt),
-		CancelAt:      optionalTime2timestamp(result.CancelAt),
-		WalletAddress: result.WalletAddress,
-		Status:        proto.InvoiceStatus(result.Status),
+		MinAmount:         result.MinAmount.Text(10),
+		Recipient:         result.Recipient,
+		Beneficiary:       result.Beneficiary,
+		Asset:             result.Asset,
+		Metadata:          result.Metadata,
+		CreateAt:          timestamppb.New(result.CreateAt),
+		Deadline:          timestamppb.New(result.Deadline),
+		FillAt:            optionalTime2timestamp(result.FillAt),
+		CancelAt:          optionalTime2timestamp(result.CancelAt),
+		CheckoutRequestAt: optionalTime2timestamp(result.CheckoutRequestAt),
+		LastCheckoutAt:    optionalTime2timestamp(result.LastCheckoutAt),
+		WalletAddress:     result.WalletAddress,
+		Status:            proto.InvoiceStatus(result.Status),
 	}, nil
 
 }
