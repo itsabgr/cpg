@@ -277,15 +277,13 @@ func (cpg *CPG) TryCheckoutInvoice(ctx context.Context, params TryCheckoutInvoic
 
 	}
 
-	err = asset.TryFlush(ctx, inv)
-
-	if err != nil {
+	if err = asset.TryFlush(ctx, inv); err != nil {
 		return ge.Wrap(ge.New("failed to flush invoice"), err)
 	}
 
-	return
 	_ = cpg.db.SetInvoiceLastCheckoutAt(ctx, inv.ID, time.Now())
 
+	return nil
 }
 
 func (cpg *CPG) checkInvoice(ctx context.Context, id string, getBalance bool) (inv *Invoice, assetProvider Asset, err error) {
