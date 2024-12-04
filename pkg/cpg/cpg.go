@@ -338,6 +338,7 @@ func (cpg *CPG) TryCheckoutInvoice(ctx context.Context, params TryCheckoutInvoic
 
 	}
 
+	inv.saltKeyring = cpg.saltKeyring
 	if err = asset.TryFlush(ctx, inv); err != nil {
 		return ge.Wrap(ge.New("failed to flush invoice"), err)
 	}
@@ -348,7 +349,7 @@ func (cpg *CPG) TryCheckoutInvoice(ctx context.Context, params TryCheckoutInvoic
 }
 
 func (cpg *CPG) checkInvoice(ctx context.Context, invoiceID, walletAddress string, getBalance bool) (inv *Invoice, assetProvider Asset, err error) {
-	inv, err = cpg.db.GetInvoice(ctx, invoiceID, walletAddress, true)
+	inv, err = cpg.db.GetInvoice(ctx, invoiceID, walletAddress, getBalance)
 	if err != nil {
 		err = ge.Wrap(ge.New("failed to get invoice"), err)
 		return nil, nil, err
@@ -368,6 +369,7 @@ func (cpg *CPG) checkInvoice(ctx context.Context, invoiceID, walletAddress strin
 	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled, InvoiceStatusCheckout:
 	case InvoiceStatusPending:
 		if getBalance {
+			inv.saltKeyring = cpg.saltKeyring
 			var invoiceBalance *big.Int
 			invoiceBalance, err = assetProvider.GetBalance(ctx, inv)
 			if err != nil {
