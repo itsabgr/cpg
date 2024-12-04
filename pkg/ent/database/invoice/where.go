@@ -112,6 +112,11 @@ func LastCheckoutAt(v time.Time) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldLastCheckoutAt, v))
 }
 
+// CheckoutRequestAt applies equality check predicate on the "checkout_request_at" field. It's identical to CheckoutRequestAtEQ.
+func CheckoutRequestAt(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldCheckoutRequestAt, v))
+}
+
 // CancelAt applies equality check predicate on the "cancel_at" field. It's identical to CancelAtEQ.
 func CancelAt(v time.Time) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldCancelAt, v))
@@ -679,6 +684,56 @@ func LastCheckoutAtIsNil() predicate.Invoice {
 // LastCheckoutAtNotNil applies the NotNil predicate on the "last_checkout_at" field.
 func LastCheckoutAtNotNil() predicate.Invoice {
 	return predicate.Invoice(sql.FieldNotNull(FieldLastCheckoutAt))
+}
+
+// CheckoutRequestAtEQ applies the EQ predicate on the "checkout_request_at" field.
+func CheckoutRequestAtEQ(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldCheckoutRequestAt, v))
+}
+
+// CheckoutRequestAtNEQ applies the NEQ predicate on the "checkout_request_at" field.
+func CheckoutRequestAtNEQ(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldCheckoutRequestAt, v))
+}
+
+// CheckoutRequestAtIn applies the In predicate on the "checkout_request_at" field.
+func CheckoutRequestAtIn(vs ...time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldIn(FieldCheckoutRequestAt, vs...))
+}
+
+// CheckoutRequestAtNotIn applies the NotIn predicate on the "checkout_request_at" field.
+func CheckoutRequestAtNotIn(vs ...time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotIn(FieldCheckoutRequestAt, vs...))
+}
+
+// CheckoutRequestAtGT applies the GT predicate on the "checkout_request_at" field.
+func CheckoutRequestAtGT(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGT(FieldCheckoutRequestAt, v))
+}
+
+// CheckoutRequestAtGTE applies the GTE predicate on the "checkout_request_at" field.
+func CheckoutRequestAtGTE(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldGTE(FieldCheckoutRequestAt, v))
+}
+
+// CheckoutRequestAtLT applies the LT predicate on the "checkout_request_at" field.
+func CheckoutRequestAtLT(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLT(FieldCheckoutRequestAt, v))
+}
+
+// CheckoutRequestAtLTE applies the LTE predicate on the "checkout_request_at" field.
+func CheckoutRequestAtLTE(v time.Time) predicate.Invoice {
+	return predicate.Invoice(sql.FieldLTE(FieldCheckoutRequestAt, v))
+}
+
+// CheckoutRequestAtIsNil applies the IsNil predicate on the "checkout_request_at" field.
+func CheckoutRequestAtIsNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldIsNull(FieldCheckoutRequestAt))
+}
+
+// CheckoutRequestAtNotNil applies the NotNil predicate on the "checkout_request_at" field.
+func CheckoutRequestAtNotNil() predicate.Invoice {
+	return predicate.Invoice(sql.FieldNotNull(FieldCheckoutRequestAt))
 }
 
 // CancelAtEQ applies the EQ predicate on the "cancel_at" field.

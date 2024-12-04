@@ -20,6 +20,7 @@ var (
 		{Name: "deadline", Type: field.TypeTime},
 		{Name: "fill_at", Type: field.TypeTime, Nullable: true},
 		{Name: "last_checkout_at", Type: field.TypeTime, Nullable: true},
+		{Name: "checkout_request_at", Type: field.TypeTime, Nullable: true},
 		{Name: "cancel_at", Type: field.TypeTime, Nullable: true},
 		{Name: "wallet_address", Type: field.TypeString, Unique: true},
 		{Name: "encrypted_salt", Type: field.TypeBytes, Unique: true},

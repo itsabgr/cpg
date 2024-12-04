@@ -99,6 +99,20 @@ func (ic *InvoiceCreate) SetNillableLastCheckoutAt(t *time.Time) *InvoiceCreate 
 	return ic
 }
 
+// SetCheckoutRequestAt sets the "checkout_request_at" field.
+func (ic *InvoiceCreate) SetCheckoutRequestAt(t time.Time) *InvoiceCreate {
+	ic.mutation.SetCheckoutRequestAt(t)
+	return ic
+}
+
+// SetNillableCheckoutRequestAt sets the "checkout_request_at" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableCheckoutRequestAt(t *time.Time) *InvoiceCreate {
+	if t != nil {
+		ic.SetCheckoutRequestAt(*t)
+	}
+	return ic
+}
+
 // SetCancelAt sets the "cancel_at" field.
 func (ic *InvoiceCreate) SetCancelAt(t time.Time) *InvoiceCreate {
 	ic.mutation.SetCancelAt(t)
@@ -318,6 +332,10 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec, error) {
 	if value, ok := ic.mutation.LastCheckoutAt(); ok {
 		_spec.SetField(invoice.FieldLastCheckoutAt, field.TypeTime, value)
 		_node.LastCheckoutAt = &value
+	}
+	if value, ok := ic.mutation.CheckoutRequestAt(); ok {
+		_spec.SetField(invoice.FieldCheckoutRequestAt, field.TypeTime, value)
+		_node.CheckoutRequestAt = &value
 	}
 	if value, ok := ic.mutation.CancelAt(); ok {
 		_spec.SetField(invoice.FieldCancelAt, field.TypeTime, value)

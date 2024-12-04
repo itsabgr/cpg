@@ -79,6 +79,26 @@ func (db *DB) SetInvoiceLastCheckoutAt(ctx context.Context, id string, at time.T
 	return nil
 }
 
+func (db *DB) SetInvoiceCheckoutRequestAt(ctx context.Context, id string, at time.Time) error {
+	inv, err := db.client.Invoice.UpdateOneID(id).Where(
+		invoice.Or(
+			invoice.DeadlineLT(time.Now()),
+			invoice.FillAtNotNil(),
+			invoice.CancelAtNotNil(),
+		),
+	).SetCheckoutRequestAt(at).Save(ctx)
+
+	if inv == nil || (err != nil && database.IsNotFound(err)) {
+		return ge.New("invoice not found or can not checkout")
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (db *DB) InsertInvoice(ctx context.Context, inv *Invoice, recovered bool) error {
 	return db.client.Invoice.Create().
 		SetID(inv.ID).

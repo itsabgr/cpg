@@ -14,14 +14,13 @@ service CPG {
   rpc CancelInvoice(CancelInvoiceInput) returns (google.protobuf.Empty); // must authenticate user
   rpc GetInvoice(GetInvoiceInput) returns (GetInvoiceOutput);
   rpc CheckInvoice(CheckInvoiceInput) returns (CheckInvoiceOutput); // for CEB
-  rpc TryCheckoutInvoice(TryCheckoutInvoiceInput) returns (google.protobuf.Empty); //admin only
+  rpc TryCheckoutInvoice(TryCheckoutInvoiceInput) returns (google.protobuf.Empty); // admin only, may too long blocking call
+  rpc RequestCheckout(RequestCheckoutInput) returns (google.protobuf.Empty); // must authenticate user
 }
 
 message PingInput {
   string text = 1;
 }
-
-
 
 message PingOutput {
   google.protobuf.Timestamp now = 1;
@@ -90,6 +89,11 @@ message CheckInvoiceOutput {
 message TryCheckoutInvoiceInput{
   string invoice_id = 1;
   bool check_balance = 2;
+  bool with_no_checkout_request = 3;
+}
+
+message RequestCheckoutInput{
+  string invoice_id = 1;
 }
 
 enum InvoiceStatus {

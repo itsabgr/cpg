@@ -31,25 +31,26 @@ const (
 // InvoiceMutation represents an operation that mutates the Invoice nodes in the graph.
 type InvoiceMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *string
-	min_amount       **big.Int
-	recipient        *string
-	beneficiary      *string
-	asset            *string
-	metadata         *string
-	create_at        *time.Time
-	deadline         *time.Time
-	fill_at          *time.Time
-	last_checkout_at *time.Time
-	cancel_at        *time.Time
-	wallet_address   *string
-	encrypted_salt   *[]byte
-	clearedFields    map[string]struct{}
-	done             bool
-	oldValue         func(context.Context) (*Invoice, error)
-	predicates       []predicate.Invoice
+	op                  Op
+	typ                 string
+	id                  *string
+	min_amount          **big.Int
+	recipient           *string
+	beneficiary         *string
+	asset               *string
+	metadata            *string
+	create_at           *time.Time
+	deadline            *time.Time
+	fill_at             *time.Time
+	last_checkout_at    *time.Time
+	checkout_request_at *time.Time
+	cancel_at           *time.Time
+	wallet_address      *string
+	encrypted_salt      *[]byte
+	clearedFields       map[string]struct{}
+	done                bool
+	oldValue            func(context.Context) (*Invoice, error)
+	predicates          []predicate.Invoice
 }
 
 var _ ent.Mutation = (*InvoiceMutation)(nil)
@@ -506,6 +507,55 @@ func (m *InvoiceMutation) ResetLastCheckoutAt() {
 	delete(m.clearedFields, invoice.FieldLastCheckoutAt)
 }
 
+// SetCheckoutRequestAt sets the "checkout_request_at" field.
+func (m *InvoiceMutation) SetCheckoutRequestAt(t time.Time) {
+	m.checkout_request_at = &t
+}
+
+// CheckoutRequestAt returns the value of the "checkout_request_at" field in the mutation.
+func (m *InvoiceMutation) CheckoutRequestAt() (r time.Time, exists bool) {
+	v := m.checkout_request_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCheckoutRequestAt returns the old "checkout_request_at" field's value of the Invoice entity.
+// If the Invoice object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InvoiceMutation) OldCheckoutRequestAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCheckoutRequestAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCheckoutRequestAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCheckoutRequestAt: %w", err)
+	}
+	return oldValue.CheckoutRequestAt, nil
+}
+
+// ClearCheckoutRequestAt clears the value of the "checkout_request_at" field.
+func (m *InvoiceMutation) ClearCheckoutRequestAt() {
+	m.checkout_request_at = nil
+	m.clearedFields[invoice.FieldCheckoutRequestAt] = struct{}{}
+}
+
+// CheckoutRequestAtCleared returns if the "checkout_request_at" field was cleared in this mutation.
+func (m *InvoiceMutation) CheckoutRequestAtCleared() bool {
+	_, ok := m.clearedFields[invoice.FieldCheckoutRequestAt]
+	return ok
+}
+
+// ResetCheckoutRequestAt resets all changes to the "checkout_request_at" field.
+func (m *InvoiceMutation) ResetCheckoutRequestAt() {
+	m.checkout_request_at = nil
+	delete(m.clearedFields, invoice.FieldCheckoutRequestAt)
+}
+
 // SetCancelAt sets the "cancel_at" field.
 func (m *InvoiceMutation) SetCancelAt(t time.Time) {
 	m.cancel_at = &t
@@ -661,7 +711,7 @@ func (m *InvoiceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *InvoiceMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 13)
 	if m.min_amount != nil {
 		fields = append(fields, invoice.FieldMinAmount)
 	}
@@ -688,6 +738,9 @@ func (m *InvoiceMutation) Fields() []string {
 	}
 	if m.last_checkout_at != nil {
 		fields = append(fields, invoice.FieldLastCheckoutAt)
+	}
+	if m.checkout_request_at != nil {
+		fields = append(fields, invoice.FieldCheckoutRequestAt)
 	}
 	if m.cancel_at != nil {
 		fields = append(fields, invoice.FieldCancelAt)
@@ -724,6 +777,8 @@ func (m *InvoiceMutation) Field(name string) (ent.Value, bool) {
 		return m.FillAt()
 	case invoice.FieldLastCheckoutAt:
 		return m.LastCheckoutAt()
+	case invoice.FieldCheckoutRequestAt:
+		return m.CheckoutRequestAt()
 	case invoice.FieldCancelAt:
 		return m.CancelAt()
 	case invoice.FieldWalletAddress:
@@ -757,6 +812,8 @@ func (m *InvoiceMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldFillAt(ctx)
 	case invoice.FieldLastCheckoutAt:
 		return m.OldLastCheckoutAt(ctx)
+	case invoice.FieldCheckoutRequestAt:
+		return m.OldCheckoutRequestAt(ctx)
 	case invoice.FieldCancelAt:
 		return m.OldCancelAt(ctx)
 	case invoice.FieldWalletAddress:
@@ -835,6 +892,13 @@ func (m *InvoiceMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetLastCheckoutAt(v)
 		return nil
+	case invoice.FieldCheckoutRequestAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCheckoutRequestAt(v)
+		return nil
 	case invoice.FieldCancelAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -892,6 +956,9 @@ func (m *InvoiceMutation) ClearedFields() []string {
 	if m.FieldCleared(invoice.FieldLastCheckoutAt) {
 		fields = append(fields, invoice.FieldLastCheckoutAt)
 	}
+	if m.FieldCleared(invoice.FieldCheckoutRequestAt) {
+		fields = append(fields, invoice.FieldCheckoutRequestAt)
+	}
 	if m.FieldCleared(invoice.FieldCancelAt) {
 		fields = append(fields, invoice.FieldCancelAt)
 	}
@@ -914,6 +981,9 @@ func (m *InvoiceMutation) ClearField(name string) error {
 		return nil
 	case invoice.FieldLastCheckoutAt:
 		m.ClearLastCheckoutAt()
+		return nil
+	case invoice.FieldCheckoutRequestAt:
+		m.ClearCheckoutRequestAt()
 		return nil
 	case invoice.FieldCancelAt:
 		m.ClearCancelAt()
@@ -952,6 +1022,9 @@ func (m *InvoiceMutation) ResetField(name string) error {
 		return nil
 	case invoice.FieldLastCheckoutAt:
 		m.ResetLastCheckoutAt()
+		return nil
+	case invoice.FieldCheckoutRequestAt:
+		m.ResetCheckoutRequestAt()
 		return nil
 	case invoice.FieldCancelAt:
 		m.ResetCancelAt()

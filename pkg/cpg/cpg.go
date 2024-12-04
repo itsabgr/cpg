@@ -153,9 +153,49 @@ func randomEncryptedSalt(saltKeyring *crypto.KeyRing, saltLength int) []byte {
 	return saltKeyring.Encrypt(crypto.ReadN(nil, saltLength), (*[24]byte)(crypto.ReadN(nil, 24)))
 }
 
+type RequestCheckoutParams struct {
+	InvoiceID string
+}
+
+func (cpg *CPG) RequestCheckout(ctx context.Context, params RequestCheckoutParams) (err error) {
+
+	if params.InvoiceID == "" {
+		return ge.New("invoice id is empty")
+	}
+
+	var inv *Invoice
+	inv, err = cpg.db.GetInvoice(ctx, params.InvoiceID, "", false)
+	if err != nil {
+		err = ge.Wrap(ge.New("failed to get invoice"), err)
+		return err
+	}
+	if inv == nil {
+		err = ge.New("invoice not found")
+		return err
+	}
+
+	invoiceStatus := inv.Status()
+
+	switch invoiceStatus {
+	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled, InvoiceStatusCheckout:
+	case InvoiceStatusPending:
+		return ge.New("invoice status is pending")
+	default:
+		return ErrInvalidInvoiceStatus
+	}
+
+	now := time.Now()
+	if err = cpg.db.SetInvoiceCheckoutRequestAt(ctx, params.InvoiceID, now); err != nil {
+		err = ge.Wrap(ge.New("failed to update invoice checkout request"), err)
+		return err
+	}
+
+	return err
+}
+
 type CancelInvoiceParams struct {
 	InvoiceID     string
-	WalletAddress string
+	WalletAddress string // to make sure
 }
 
 func (cpg *CPG) CancelInvoice(ctx context.Context, params CancelInvoiceParams) (err error) {
@@ -187,8 +227,7 @@ func (cpg *CPG) CancelInvoice(ctx context.Context, params CancelInvoiceParams) (
 		err = ge.Detail(ge.New("invoice status is not pending"), ge.D{"invoiceStatus": invoiceStatus})
 		return err
 	default:
-		err = ErrInvalidInvoiceStatus
-		return err
+		return ErrInvalidInvoiceStatus
 	}
 
 	now := time.Now()

@@ -127,6 +127,25 @@ func (serv grpcServer) CancelInvoice(ctx context.Context, input *proto.CancelInv
 
 }
 
+func (serv grpcServer) RequestCheckout(ctx context.Context, input *proto.RequestCheckoutInput) (*empty.Empty, error) {
+
+	cancel, err := serv.rateLimitRequest(&ctx, time.Second*1, input)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
+	err = serv.cpg.RequestCheckout(ctx, RequestCheckoutParams{
+		InvoiceID: input.GetInvoiceId(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+
+}
+
 func (serv grpcServer) GetInvoice(ctx context.Context, input *proto.GetInvoiceInput) (*proto.GetInvoiceOutput, error) {
 
 	result, err := serv.cpg.GetInvoice(ctx, GetInvoiceParams{
