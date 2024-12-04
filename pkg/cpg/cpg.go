@@ -166,12 +166,10 @@ func (cpg *CPG) RequestCheckout(ctx context.Context, params RequestCheckoutParam
 	var inv *Invoice
 	inv, err = cpg.db.GetInvoice(ctx, params.InvoiceID, "", false)
 	if err != nil {
-		err = ge.Wrap(ge.New("failed to get invoice"), err)
-		return err
+		return ge.Wrap(ge.New("failed to get invoice"), err)
 	}
 	if inv == nil {
-		err = ge.New("invoice not found")
-		return err
+		return ge.New("invoice not found")
 	}
 
 	if inv.CheckoutRequestAt != nil {
