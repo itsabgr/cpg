@@ -10,14 +10,12 @@ import (
 )
 
 type DB struct {
-	client  *database.Client
-	lockTTL time.Duration
+	client *database.Client
 }
 
 func NewDB(client *database.Client) *DB {
 	return &DB{
-		client:  client,
-		lockTTL: time.Second * 10,
+		client: client,
 	}
 }
 
