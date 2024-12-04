@@ -3,6 +3,7 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
+	"github.com/itsabgr/ge"
 	"math/big"
 	"time"
 )
@@ -14,7 +15,7 @@ type Invoice struct {
 func (Invoice) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("id").Unique().NotEmpty().Immutable(),
-		field.String("min_amount").GoType(&big.Int{}).ValueScanner(field.TextValueScanner[*big.Int]{}).NotEmpty().Immutable(),
+		field.String("min_amount").GoType(&big.Int{}).ValueScanner(field.TextValueScanner[*big.Int]{}).NotEmpty().Immutable().Validate(validateMinAmount),
 		field.String("recipient").NotEmpty().Immutable(),
 		field.String("beneficiary").NotEmpty().Immutable(),
 		field.String("asset").NotEmpty().Immutable(),
@@ -28,4 +29,15 @@ func (Invoice) Fields() []ent.Field {
 		field.String("wallet_address").Unique().NotEmpty().Immutable(),
 		field.Bytes("encrypted_salt").Sensitive().Unique().NotEmpty().Immutable(),
 	}
+}
+
+func validateMinAmount(minAmountStr string) error {
+	minAmount, ok := (&big.Int{}).SetString(minAmountStr, 10)
+	if !ok {
+		return ge.New("failed to parse min_amount")
+	}
+	if minAmount.Cmp(big.NewInt(0)) <= 0 {
+		return ge.New("non-positive min_amount")
+	}
+	return nil
 }
