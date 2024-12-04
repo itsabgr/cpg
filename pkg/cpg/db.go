@@ -60,7 +60,7 @@ func (db *DB) SetInvoiceFillAt(ctx context.Context, id string, at time.Time) err
 	return nil
 }
 
-func (db *DB) SetInvoiceCheckoutAt(ctx context.Context, id string, at time.Time) error {
+func (db *DB) SetInvoiceLastCheckoutAt(ctx context.Context, id string, at time.Time) error {
 	inv, err := db.client.Invoice.UpdateOneID(id).Where(
 		invoice.Or(
 			invoice.DeadlineLT(time.Now()),

@@ -284,6 +284,8 @@ func (cpg *CPG) TryCheckoutInvoice(ctx context.Context, params TryCheckoutInvoic
 	}
 
 	return
+	_ = cpg.db.SetInvoiceLastCheckoutAt(ctx, inv.ID, time.Now())
+
 }
 
 func (cpg *CPG) checkInvoice(ctx context.Context, id string, getBalance bool) (inv *Invoice, assetProvider Asset, err error) {
