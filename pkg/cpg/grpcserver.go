@@ -3,7 +3,11 @@ package cpg
 import (
 	"context"
 	"cpg/pkg/proto"
+	"cpg/pkg/ratelimit"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/itsabgr/ge"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"math/big"
@@ -11,15 +15,17 @@ import (
 )
 
 type grpcServer struct {
-	cpg    *CPG
-	assets map[string]*proto.AssetInfo
+	rateLimit *ratelimit.RateLimit
+	cpg       *CPG
+	assets    map[string]*proto.AssetInfo
 	proto.UnimplementedCPGServer
 }
 
-func NewGRPCServer(cpg *CPG) proto.CPGServer {
+func NewGRPCServer(cpg *CPG, rateLimit *ratelimit.RateLimit) proto.CPGServer {
 
 	serv := grpcServer{
-		cpg: cpg,
+		rateLimit: rateLimit,
+		cpg:       cpg,
 	}
 
 	serv.assets = make(map[string]*proto.AssetInfo, len(cpg.assets.map_))
@@ -55,7 +61,19 @@ func (serv grpcServer) ListAssets(ctx context.Context, _ *empty.Empty) (*proto.L
 
 func (serv grpcServer) RecoverInvoice(ctx context.Context, input *proto.RecoverInvoiceInput) (*empty.Empty, error) {
 
-	err := serv.cpg.RecoverInvoice(ctx, RecoverInvoiceParams{
+	cancel, err := serv.rateLimitRequest(&ctx, time.Second*2, input)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
+	if ok, err := serv.rateLimit.Limit(ctx, input.GetInvoiceId(), time.Second*5); err != nil {
+		return nil, err
+	} else if !ok {
+		return nil, status.Error(codes.ResourceExhausted, "busy")
+	}
+
+	err = serv.cpg.RecoverInvoice(ctx, RecoverInvoiceParams{
 		InvoiceID:     input.GetInvoiceId(),
 		InvoiceBackup: input.GetInvoiceBackup(),
 	})
@@ -91,7 +109,13 @@ func (serv grpcServer) CreateInvoice(ctx context.Context, input *proto.CreateInv
 
 func (serv grpcServer) CancelInvoice(ctx context.Context, input *proto.CancelInvoiceInput) (*empty.Empty, error) {
 
-	err := serv.cpg.CancelInvoice(ctx, CancelInvoiceParams{
+	cancel, err := serv.rateLimitRequest(&ctx, time.Second*2, input)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
+	err = serv.cpg.CancelInvoice(ctx, CancelInvoiceParams{
 		InvoiceID: input.GetInvoiceId(),
 	})
 	if err != nil {
@@ -129,6 +153,12 @@ func (serv grpcServer) GetInvoice(ctx context.Context, input *proto.GetInvoiceIn
 
 func (serv grpcServer) CheckInvoice(ctx context.Context, input *proto.CheckInvoiceInput) (*proto.CheckInvoiceOutput, error) {
 
+	cancel, err := serv.rateLimitRequest(&ctx, time.Second*5, input)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
 	result, err := serv.cpg.CheckInvoice(ctx, CheckInvoiceParams{
 		InvoiceID: input.GetInvoiceId(),
 	})
@@ -144,7 +174,13 @@ func (serv grpcServer) CheckInvoice(ctx context.Context, input *proto.CheckInvoi
 
 func (serv grpcServer) TryCheckoutInvoice(ctx context.Context, input *proto.TryCheckoutInvoiceInput) (*empty.Empty, error) {
 
-	err := serv.cpg.TryCheckoutInvoice(ctx, TryCheckoutInvoiceParams{
+	cancel, err := serv.rateLimitRequest(&ctx, time.Second*10, input)
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
+	err = serv.cpg.TryCheckoutInvoice(ctx, TryCheckoutInvoiceParams{
 		InvoiceID:    input.GetInvoiceId(),
 		CheckBalance: input.GetCheckBalance(),
 	})
@@ -172,4 +208,22 @@ func str2BigInt(str string, base int) *big.Int {
 		n = big.NewInt(0)
 	}
 	return n
+}
+
+func (serv grpcServer) rateLimitRequest(ctx *context.Context, duration time.Duration, input interface{ GetInvoiceId() string }) (context.CancelFunc, error) {
+
+	ge.Assert(duration > 0)
+
+	if ok, err := serv.rateLimit.Limit(*ctx, input.GetInvoiceId(), duration+time.Second); err != nil {
+		return nil, err
+	} else if !ok {
+		return nil, status.Error(codes.ResourceExhausted, "invoice busy")
+	}
+
+	timeoutCtx, cancelCtx := context.WithTimeout(*ctx, duration)
+
+	*ctx = timeoutCtx
+
+	return cancelCtx, nil
+
 }

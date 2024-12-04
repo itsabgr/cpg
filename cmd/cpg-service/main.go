@@ -8,14 +8,18 @@ import (
 	"cpg/pkg/crypto"
 	"cpg/pkg/ent/database"
 	"cpg/pkg/proto"
+	"cpg/pkg/ratelimit"
+	"github.com/itsabgr/fak"
 	"github.com/itsabgr/ge"
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log/slog"
 	"net"
 	"os"
+	"time"
 )
 
 type env struct {
@@ -24,6 +28,7 @@ type env struct {
 	BackupKeyring string `env:"BACKUP_KEYRING,notEmpty"`
 	GRPCServer    string `env:"GRPC_SERVER,notEmpty"`
 	PostgresURI   string `env:"PG_URI,notEmpty"`
+	RateLimiter   string `env:"RATE_LIMITER,notEmpty"`
 }
 
 func main() {
@@ -40,6 +45,29 @@ func main() {
 		defer func() { _ = ln.Close() }()
 
 		slog.Debug("tcp server listening", slog.String("addr", ln.Addr().String()))
+
+		var iRedisClient ratelimit.IRedisClient
+
+		if config.RateLimiter == "NO" {
+			iRedisClient = ratelimit.NoLimit()
+			slog.Warn("no rate limiter")
+		} else if config.RateLimiter == "MEMORY" {
+			iRedisClient = ratelimit.NewInMemory(time.Second * 30)
+			slog.Info("in-memory rate limiter")
+		} else {
+
+			redisClient := redis.NewClient(ge.Must(redis.ParseURL(config.RateLimiter)))
+			defer func() { _ = redisClient.Close() }()
+
+			slog.Info("redis rate limiter")
+
+			ge.Must(fak.Timeout(ctx, time.Second*5, func(timeoutCtx context.Context) (string, error) {
+				return redisClient.Ping(ctx).Result()
+			}))
+
+		}
+
+		ratelimiter := ratelimit.NewRateLimit(iRedisClient)
 
 		dbClient := ge.Must(database.Open("postgres", config.PostgresURI))
 
@@ -58,7 +86,7 @@ func main() {
 
 		grpcServer := grpc.NewServer()
 
-		proto.RegisterCPGServer(grpcServer, cpg.NewGRPCServer(cpg.NewCPG(assets, cpg.NewDB(dbClient), saltKR, backupKR)))
+		proto.RegisterCPGServer(grpcServer, cpg.NewGRPCServer(cpg.NewCPG(assets, cpg.NewDB(dbClient), saltKR, backupKR), ratelimiter))
 
 		if daemon.Debug() {
 			reflection.Register(grpcServer)
