@@ -187,8 +187,7 @@ func (cpg *CPG) RequestCheckout(ctx context.Context, params RequestCheckoutParam
 		return ErrInvalidInvoiceStatus
 	}
 
-	now := time.Now()
-	if err = cpg.db.SetInvoiceCheckoutRequestAt(ctx, params.InvoiceID, now); err != nil {
+	if err = cpg.db.SetInvoiceCheckoutRequestAt(ctx, params.InvoiceID, time.Now()); err != nil {
 		err = ge.Wrap(ge.New("failed to update invoice checkout request"), err)
 		return err
 	}

@@ -237,7 +237,7 @@ func (serv grpcServer) rateLimitRequest(ctx *context.Context, duration time.Dura
 	if ok, err := serv.rateLimit.Limit(*ctx, input.GetInvoiceId(), duration+time.Second); err != nil {
 		return nil, err
 	} else if !ok {
-		return nil, status.Error(codes.ResourceExhausted, "invoice busy")
+		return nil, status.Error(codes.ResourceExhausted, "invoice is busy")
 	}
 
 	timeoutCtx, cancelCtx := context.WithTimeout(*ctx, duration)
