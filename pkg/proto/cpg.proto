@@ -7,13 +7,13 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
 service CPG {
-  rpc Ping(PingInput) returns (PingOutput);
+  rpc Ping(PingInput) returns (PingOutput); // for health check
   rpc ListAssets(google.protobuf.Empty) returns (ListAssetsOutput);
   rpc RecoverInvoice(RecoverInvoiceInput) returns (google.protobuf.Empty); // use captcha
   rpc CreateInvoice(CreateInvoiceInput) returns (CreateInvoiceOutput); // use captcha
   rpc CancelInvoice(CancelInvoiceInput) returns (google.protobuf.Empty); // must authenticate user
-  rpc GetInvoice(GetInvoiceInput) returns (GetInvoiceOutput);
-  rpc CheckInvoice(CheckInvoiceInput) returns (CheckInvoiceOutput); // for CEB
+  rpc GetInvoice(GetInvoiceInput) returns (GetInvoiceOutput); // should authenticate user
+  rpc CheckInvoice(CheckInvoiceInput) returns (CheckInvoiceOutput); // should authenticate user, also CEB can use it to notify updates
   rpc TryCheckoutInvoice(TryCheckoutInvoiceInput) returns (google.protobuf.Empty); // admin only, may too long blocking call
   rpc RequestCheckout(RequestCheckoutInput) returns (google.protobuf.Empty); // must authenticate user
 }
