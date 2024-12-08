@@ -4,7 +4,7 @@ COPY . .
 RUN mkdir -p build
 ENV GOPROXY=https://goproxy.cn,https://goproxy.io,direct
 ENV CGO_ENABLED=0
-RUN go build -o build ./cmd/cpg-service
+RUN go build -ldflags="-linkmode external -extldflags -static" -tags netgo -o build/cpg-service ./cmd/cpg-service
 
 FROM alpine
 WORKDIR /
