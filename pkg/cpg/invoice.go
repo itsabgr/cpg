@@ -38,6 +38,7 @@ type Invoice struct {
 	LastCheckoutAt    *time.Time
 	CheckoutRequestAt *time.Time
 	CancelAt          *time.Time
+	AuthCheckout      bool
 	WalletAddress     string
 	EncryptedSalt     []byte
 	saltKeyring       *crypto.KeyRing

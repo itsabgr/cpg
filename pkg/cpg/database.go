@@ -138,6 +138,7 @@ func (db *DB) InsertInvoice(ctx context.Context, inv *Invoice, recovered bool) e
 		SetDeadline(inv.Deadline).
 		SetWalletAddress(inv.WalletAddress).
 		SetEncryptedSalt(inv.EncryptedSalt).
+		SetAutoCheckout(inv.AuthCheckout).
 		Exec(ctx)
 }
 
@@ -155,6 +156,7 @@ func (db *DB) GetInvoice(ctx context.Context, id, walletAddress string, withSalt
 		invoice.FieldCheckoutRequestAt,
 		invoice.FieldCancelAt,
 		invoice.FieldWalletAddress,
+		invoice.FieldAutoCheckout,
 	}
 	if withSalt {
 		fields = append(fields, invoice.FieldEncryptedSalt)
@@ -194,6 +196,7 @@ func (db *DB) GetInvoice(ctx context.Context, id, walletAddress string, withSalt
 		LastCheckoutAt:    found.LastCheckoutAt,
 		CheckoutRequestAt: found.CheckoutRequestAt,
 		CancelAt:          found.CancelAt,
+		AuthCheckout:      found.AutoCheckout,
 		WalletAddress:     found.WalletAddress,
 		EncryptedSalt:     found.EncryptedSalt,
 	}

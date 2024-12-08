@@ -117,6 +117,11 @@ func CheckoutRequestAt(v time.Time) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldCheckoutRequestAt, v))
 }
 
+// AutoCheckout applies equality check predicate on the "auto_checkout" field. It's identical to AutoCheckoutEQ.
+func AutoCheckout(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldAutoCheckout, v))
+}
+
 // CancelAt applies equality check predicate on the "cancel_at" field. It's identical to CancelAtEQ.
 func CancelAt(v time.Time) predicate.Invoice {
 	return predicate.Invoice(sql.FieldEQ(FieldCancelAt, v))
@@ -734,6 +739,16 @@ func CheckoutRequestAtIsNil() predicate.Invoice {
 // CheckoutRequestAtNotNil applies the NotNil predicate on the "checkout_request_at" field.
 func CheckoutRequestAtNotNil() predicate.Invoice {
 	return predicate.Invoice(sql.FieldNotNull(FieldCheckoutRequestAt))
+}
+
+// AutoCheckoutEQ applies the EQ predicate on the "auto_checkout" field.
+func AutoCheckoutEQ(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldEQ(FieldAutoCheckout, v))
+}
+
+// AutoCheckoutNEQ applies the NEQ predicate on the "auto_checkout" field.
+func AutoCheckoutNEQ(v bool) predicate.Invoice {
+	return predicate.Invoice(sql.FieldNEQ(FieldAutoCheckout, v))
 }
 
 // CancelAtEQ applies the EQ predicate on the "cancel_at" field.

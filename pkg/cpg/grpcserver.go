@@ -87,12 +87,13 @@ func (serv grpcServer) RecoverInvoice(ctx context.Context, input *proto.RecoverI
 func (serv grpcServer) CreateInvoice(ctx context.Context, input *proto.CreateInvoiceInput) (*proto.CreateInvoiceOutput, error) {
 
 	result, err := serv.cpg.CreateInvoice(ctx, CreateInvoiceParams{
-		AssetName:   input.GetAssetName(),
-		Metadata:    input.GetMetadata(),
-		Recipient:   input.GetRecipient(),
-		Beneficiary: input.GetBeneficiary(),
-		MinAmount:   str2BigInt(input.GetMinAmount(), 10),
-		Deadline:    input.GetDeadline().AsTime(),
+		AssetName:    input.GetAssetName(),
+		Metadata:     input.GetMetadata(),
+		Recipient:    input.GetRecipient(),
+		Beneficiary:  input.GetBeneficiary(),
+		AutoCheckout: input.GetAutoCheckout(),
+		MinAmount:    str2BigInt(input.GetMinAmount(), 10),
+		Deadline:     input.GetDeadline().AsTime(),
 	})
 	if err != nil {
 		return nil, err
@@ -165,6 +166,7 @@ func (serv grpcServer) GetInvoice(ctx context.Context, input *proto.GetInvoiceIn
 		CancelAt:          optionalTime2timestamp(result.CancelAt),
 		CheckoutRequestAt: optionalTime2timestamp(result.CheckoutRequestAt),
 		LastCheckoutAt:    optionalTime2timestamp(result.LastCheckoutAt),
+		AutoCheckout:      result.AutoCheckout,
 		WalletAddress:     result.WalletAddress,
 		Status:            proto.InvoiceStatus(result.Status),
 	}, nil

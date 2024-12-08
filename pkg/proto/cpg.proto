@@ -64,6 +64,7 @@ message CreateInvoiceInput {
   string metadata = 2;
   string recipient = 3;
   string beneficiary = 4;
+  bool auto_checkout = 7;
   string min_amount = 5;
   google.protobuf.Timestamp deadline = 6;
 }
@@ -94,6 +95,7 @@ message GetInvoiceOutput {
   optional  google.protobuf.Timestamp last_checkout_at = 14;
   optional  google.protobuf.Timestamp checkout_request_at = 15;
   string wallet_address = 10;
+  bool auto_checkout = 16;
   InvoiceStatus status = 11;
   string metadata = 12;
 }

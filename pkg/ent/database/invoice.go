@@ -38,6 +38,8 @@ type Invoice struct {
 	LastCheckoutAt *time.Time `json:"last_checkout_at,omitempty"`
 	// CheckoutRequestAt holds the value of the "checkout_request_at" field.
 	CheckoutRequestAt *time.Time `json:"checkout_request_at,omitempty"`
+	// AutoCheckout holds the value of the "auto_checkout" field.
+	AutoCheckout bool `json:"auto_checkout,omitempty"`
 	// CancelAt holds the value of the "cancel_at" field.
 	CancelAt *time.Time `json:"cancel_at,omitempty"`
 	// WalletAddress holds the value of the "wallet_address" field.
@@ -54,6 +56,8 @@ func (*Invoice) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case invoice.FieldEncryptedSalt:
 			values[i] = new([]byte)
+		case invoice.FieldAutoCheckout:
+			values[i] = new(sql.NullBool)
 		case invoice.FieldID, invoice.FieldRecipient, invoice.FieldBeneficiary, invoice.FieldAsset, invoice.FieldMetadata, invoice.FieldWalletAddress:
 			values[i] = new(sql.NullString)
 		case invoice.FieldCreateAt, invoice.FieldDeadline, invoice.FieldFillAt, invoice.FieldLastCheckoutAt, invoice.FieldCheckoutRequestAt, invoice.FieldCancelAt:
@@ -143,6 +147,12 @@ func (i *Invoice) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				i.CheckoutRequestAt = new(time.Time)
 				*i.CheckoutRequestAt = value.Time
+			}
+		case invoice.FieldAutoCheckout:
+			if value, ok := values[j].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field auto_checkout", values[j])
+			} else if value.Valid {
+				i.AutoCheckout = value.Bool
 			}
 		case invoice.FieldCancelAt:
 			if value, ok := values[j].(*sql.NullTime); !ok {
@@ -234,6 +244,9 @@ func (i *Invoice) String() string {
 		builder.WriteString("checkout_request_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
+	builder.WriteString(", ")
+	builder.WriteString("auto_checkout=")
+	builder.WriteString(fmt.Sprintf("%v", i.AutoCheckout))
 	builder.WriteString(", ")
 	if v := i.CancelAt; v != nil {
 		builder.WriteString("cancel_at=")

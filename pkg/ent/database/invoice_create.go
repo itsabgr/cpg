@@ -113,6 +113,20 @@ func (ic *InvoiceCreate) SetNillableCheckoutRequestAt(t *time.Time) *InvoiceCrea
 	return ic
 }
 
+// SetAutoCheckout sets the "auto_checkout" field.
+func (ic *InvoiceCreate) SetAutoCheckout(b bool) *InvoiceCreate {
+	ic.mutation.SetAutoCheckout(b)
+	return ic
+}
+
+// SetNillableAutoCheckout sets the "auto_checkout" field if the given value is not nil.
+func (ic *InvoiceCreate) SetNillableAutoCheckout(b *bool) *InvoiceCreate {
+	if b != nil {
+		ic.SetAutoCheckout(*b)
+	}
+	return ic
+}
+
 // SetCancelAt sets the "cancel_at" field.
 func (ic *InvoiceCreate) SetCancelAt(t time.Time) *InvoiceCreate {
 	ic.mutation.SetCancelAt(t)
@@ -184,6 +198,10 @@ func (ic *InvoiceCreate) defaults() {
 		v := invoice.DefaultCreateAt()
 		ic.mutation.SetCreateAt(v)
 	}
+	if _, ok := ic.mutation.AutoCheckout(); !ok {
+		v := invoice.DefaultAutoCheckout
+		ic.mutation.SetAutoCheckout(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -233,6 +251,9 @@ func (ic *InvoiceCreate) check() error {
 	}
 	if _, ok := ic.mutation.Deadline(); !ok {
 		return &ValidationError{Name: "deadline", err: errors.New(`database: missing required field "Invoice.deadline"`)}
+	}
+	if _, ok := ic.mutation.AutoCheckout(); !ok {
+		return &ValidationError{Name: "auto_checkout", err: errors.New(`database: missing required field "Invoice.auto_checkout"`)}
 	}
 	if _, ok := ic.mutation.WalletAddress(); !ok {
 		return &ValidationError{Name: "wallet_address", err: errors.New(`database: missing required field "Invoice.wallet_address"`)}
@@ -336,6 +357,10 @@ func (ic *InvoiceCreate) createSpec() (*Invoice, *sqlgraph.CreateSpec, error) {
 	if value, ok := ic.mutation.CheckoutRequestAt(); ok {
 		_spec.SetField(invoice.FieldCheckoutRequestAt, field.TypeTime, value)
 		_node.CheckoutRequestAt = &value
+	}
+	if value, ok := ic.mutation.AutoCheckout(); ok {
+		_spec.SetField(invoice.FieldAutoCheckout, field.TypeBool, value)
+		_node.AutoCheckout = value
 	}
 	if value, ok := ic.mutation.CancelAt(); ok {
 		_spec.SetField(invoice.FieldCancelAt, field.TypeTime, value)

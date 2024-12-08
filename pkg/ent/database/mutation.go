@@ -44,6 +44,7 @@ type InvoiceMutation struct {
 	fill_at             *time.Time
 	last_checkout_at    *time.Time
 	checkout_request_at *time.Time
+	auto_checkout       *bool
 	cancel_at           *time.Time
 	wallet_address      *string
 	encrypted_salt      *[]byte
@@ -556,6 +557,42 @@ func (m *InvoiceMutation) ResetCheckoutRequestAt() {
 	delete(m.clearedFields, invoice.FieldCheckoutRequestAt)
 }
 
+// SetAutoCheckout sets the "auto_checkout" field.
+func (m *InvoiceMutation) SetAutoCheckout(b bool) {
+	m.auto_checkout = &b
+}
+
+// AutoCheckout returns the value of the "auto_checkout" field in the mutation.
+func (m *InvoiceMutation) AutoCheckout() (r bool, exists bool) {
+	v := m.auto_checkout
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAutoCheckout returns the old "auto_checkout" field's value of the Invoice entity.
+// If the Invoice object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InvoiceMutation) OldAutoCheckout(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAutoCheckout is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAutoCheckout requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAutoCheckout: %w", err)
+	}
+	return oldValue.AutoCheckout, nil
+}
+
+// ResetAutoCheckout resets all changes to the "auto_checkout" field.
+func (m *InvoiceMutation) ResetAutoCheckout() {
+	m.auto_checkout = nil
+}
+
 // SetCancelAt sets the "cancel_at" field.
 func (m *InvoiceMutation) SetCancelAt(t time.Time) {
 	m.cancel_at = &t
@@ -711,7 +748,7 @@ func (m *InvoiceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *InvoiceMutation) Fields() []string {
-	fields := make([]string, 0, 13)
+	fields := make([]string, 0, 14)
 	if m.min_amount != nil {
 		fields = append(fields, invoice.FieldMinAmount)
 	}
@@ -741,6 +778,9 @@ func (m *InvoiceMutation) Fields() []string {
 	}
 	if m.checkout_request_at != nil {
 		fields = append(fields, invoice.FieldCheckoutRequestAt)
+	}
+	if m.auto_checkout != nil {
+		fields = append(fields, invoice.FieldAutoCheckout)
 	}
 	if m.cancel_at != nil {
 		fields = append(fields, invoice.FieldCancelAt)
@@ -779,6 +819,8 @@ func (m *InvoiceMutation) Field(name string) (ent.Value, bool) {
 		return m.LastCheckoutAt()
 	case invoice.FieldCheckoutRequestAt:
 		return m.CheckoutRequestAt()
+	case invoice.FieldAutoCheckout:
+		return m.AutoCheckout()
 	case invoice.FieldCancelAt:
 		return m.CancelAt()
 	case invoice.FieldWalletAddress:
@@ -814,6 +856,8 @@ func (m *InvoiceMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldLastCheckoutAt(ctx)
 	case invoice.FieldCheckoutRequestAt:
 		return m.OldCheckoutRequestAt(ctx)
+	case invoice.FieldAutoCheckout:
+		return m.OldAutoCheckout(ctx)
 	case invoice.FieldCancelAt:
 		return m.OldCancelAt(ctx)
 	case invoice.FieldWalletAddress:
@@ -898,6 +942,13 @@ func (m *InvoiceMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCheckoutRequestAt(v)
+		return nil
+	case invoice.FieldAutoCheckout:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAutoCheckout(v)
 		return nil
 	case invoice.FieldCancelAt:
 		v, ok := value.(time.Time)
@@ -1025,6 +1076,9 @@ func (m *InvoiceMutation) ResetField(name string) error {
 		return nil
 	case invoice.FieldCheckoutRequestAt:
 		m.ResetCheckoutRequestAt()
+		return nil
+	case invoice.FieldAutoCheckout:
+		m.ResetAutoCheckout()
 		return nil
 	case invoice.FieldCancelAt:
 		m.ResetCancelAt()

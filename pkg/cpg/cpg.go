@@ -83,12 +83,13 @@ func (cpg *CPG) RecoverInvoice(ctx context.Context, params RecoverInvoiceParams)
 }
 
 type CreateInvoiceParams struct {
-	AssetName   string
-	Metadata    string
-	Recipient   string
-	Beneficiary string
-	MinAmount   *big.Int
-	Deadline    time.Time
+	AssetName    string
+	Metadata     string
+	Recipient    string
+	Beneficiary  string
+	AutoCheckout bool
+	MinAmount    *big.Int
+	Deadline     time.Time
 }
 
 type CreateInvoiceResult struct {
@@ -129,6 +130,7 @@ func (cpg *CPG) CreateInvoice(ctx context.Context, params CreateInvoiceParams) (
 	inv.Deadline = params.Deadline
 	inv.ID = uuid.NewString()
 	inv.CreateAt = time.Now()
+	inv.AuthCheckout = params.AutoCheckout
 	inv.MinAmount.Set(params.MinAmount)
 	inv.EncryptedSalt = randomEncryptedSalt(cpg.saltKeyring, assetInfo.SaltLength)
 
@@ -256,6 +258,7 @@ type GetInvoiceResult struct {
 	CancelAt          *time.Time
 	LastCheckoutAt    *time.Time
 	CheckoutRequestAt *time.Time
+	AutoCheckout      bool
 	WalletAddress     string
 	Status            InvoiceStatus
 }
@@ -288,6 +291,7 @@ func (cpg *CPG) GetInvoice(ctx context.Context, params GetInvoiceParams) (result
 		CancelAt:          inv.CancelAt,
 		LastCheckoutAt:    inv.LastCheckoutAt,
 		CheckoutRequestAt: inv.CheckoutRequestAt,
+		AutoCheckout:      inv.AuthCheckout,
 		WalletAddress:     inv.WalletAddress,
 		Status:            inv.Status(),
 	}

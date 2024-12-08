@@ -21,7 +21,21 @@ func init() {
 	invoiceDescMinAmount := invoiceFields[1].Descriptor()
 	invoice.ValueScanner.MinAmount = invoiceDescMinAmount.ValueScanner.(field.TypeValueScanner[*big.Int])
 	// invoice.MinAmountValidator is a validator for the "min_amount" field. It is called by the builders before save.
-	invoice.MinAmountValidator = invoiceDescMinAmount.Validators[0].(func(string) error)
+	invoice.MinAmountValidator = func() func(string) error {
+		validators := invoiceDescMinAmount.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(min_amount string) error {
+			for _, fn := range fns {
+				if err := fn(min_amount); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 	// invoiceDescRecipient is the schema descriptor for recipient field.
 	invoiceDescRecipient := invoiceFields[2].Descriptor()
 	// invoice.RecipientValidator is a validator for the "recipient" field. It is called by the builders before save.
@@ -42,12 +56,16 @@ func init() {
 	invoiceDescCreateAt := invoiceFields[6].Descriptor()
 	// invoice.DefaultCreateAt holds the default value on creation for the create_at field.
 	invoice.DefaultCreateAt = invoiceDescCreateAt.Default.(func() time.Time)
+	// invoiceDescAutoCheckout is the schema descriptor for auto_checkout field.
+	invoiceDescAutoCheckout := invoiceFields[11].Descriptor()
+	// invoice.DefaultAutoCheckout holds the default value on creation for the auto_checkout field.
+	invoice.DefaultAutoCheckout = invoiceDescAutoCheckout.Default.(bool)
 	// invoiceDescWalletAddress is the schema descriptor for wallet_address field.
-	invoiceDescWalletAddress := invoiceFields[12].Descriptor()
+	invoiceDescWalletAddress := invoiceFields[13].Descriptor()
 	// invoice.WalletAddressValidator is a validator for the "wallet_address" field. It is called by the builders before save.
 	invoice.WalletAddressValidator = invoiceDescWalletAddress.Validators[0].(func(string) error)
 	// invoiceDescEncryptedSalt is the schema descriptor for encrypted_salt field.
-	invoiceDescEncryptedSalt := invoiceFields[13].Descriptor()
+	invoiceDescEncryptedSalt := invoiceFields[14].Descriptor()
 	// invoice.EncryptedSaltValidator is a validator for the "encrypted_salt" field. It is called by the builders before save.
 	invoice.EncryptedSaltValidator = invoiceDescEncryptedSalt.Validators[0].(func([]byte) error)
 	// invoiceDescID is the schema descriptor for id field.

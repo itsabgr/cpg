@@ -27,8 +27,8 @@ const (
 	CPG_CancelInvoice_FullMethodName      = "/CPG/CancelInvoice"
 	CPG_GetInvoice_FullMethodName         = "/CPG/GetInvoice"
 	CPG_CheckInvoice_FullMethodName       = "/CPG/CheckInvoice"
-	CPG_TryCheckoutInvoice_FullMethodName = "/CPG/TryCheckoutInvoice"
 	CPG_RequestCheckout_FullMethodName    = "/CPG/RequestCheckout"
+	CPG_TryCheckoutInvoice_FullMethodName = "/CPG/TryCheckoutInvoice"
 )
 
 // CPGClient is the client API for CPG service.
@@ -49,10 +49,10 @@ type CPGClient interface {
 	GetInvoice(ctx context.Context, in *GetInvoiceInput, opts ...grpc.CallOption) (*GetInvoiceOutput, error)
 	// CheckInvoice check a pending invoice balance and make it filled if it reaches the required min amount
 	CheckInvoice(ctx context.Context, in *CheckInvoiceInput, opts ...grpc.CallOption) (*CheckInvoiceOutput, error)
-	// TryCheckoutInvoice try to checkout an invoice only if its not pending, it may take tool long and should be used async by admin
-	TryCheckoutInvoice(ctx context.Context, in *TryCheckoutInvoiceInput, opts ...grpc.CallOption) (*empty.Empty, error)
 	// RequestCheckout set a non-pending invoice to too check out as soon as possible
 	RequestCheckout(ctx context.Context, in *RequestCheckoutInput, opts ...grpc.CallOption) (*empty.Empty, error)
+	// TryCheckoutInvoice try to checkout an invoice only if its not pending, it may take tool long and should be used async by admin
+	TryCheckoutInvoice(ctx context.Context, in *TryCheckoutInvoiceInput, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type cPGClient struct {
@@ -133,20 +133,20 @@ func (c *cPGClient) CheckInvoice(ctx context.Context, in *CheckInvoiceInput, opt
 	return out, nil
 }
 
-func (c *cPGClient) TryCheckoutInvoice(ctx context.Context, in *TryCheckoutInvoiceInput, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *cPGClient) RequestCheckout(ctx context.Context, in *RequestCheckoutInput, opts ...grpc.CallOption) (*empty.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, CPG_TryCheckoutInvoice_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, CPG_RequestCheckout_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *cPGClient) RequestCheckout(ctx context.Context, in *RequestCheckoutInput, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *cPGClient) TryCheckoutInvoice(ctx context.Context, in *TryCheckoutInvoiceInput, opts ...grpc.CallOption) (*empty.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, CPG_RequestCheckout_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, CPG_TryCheckoutInvoice_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -171,10 +171,10 @@ type CPGServer interface {
 	GetInvoice(context.Context, *GetInvoiceInput) (*GetInvoiceOutput, error)
 	// CheckInvoice check a pending invoice balance and make it filled if it reaches the required min amount
 	CheckInvoice(context.Context, *CheckInvoiceInput) (*CheckInvoiceOutput, error)
-	// TryCheckoutInvoice try to checkout an invoice only if its not pending, it may take tool long and should be used async by admin
-	TryCheckoutInvoice(context.Context, *TryCheckoutInvoiceInput) (*empty.Empty, error)
 	// RequestCheckout set a non-pending invoice to too check out as soon as possible
 	RequestCheckout(context.Context, *RequestCheckoutInput) (*empty.Empty, error)
+	// TryCheckoutInvoice try to checkout an invoice only if its not pending, it may take tool long and should be used async by admin
+	TryCheckoutInvoice(context.Context, *TryCheckoutInvoiceInput) (*empty.Empty, error)
 	mustEmbedUnimplementedCPGServer()
 }
 
@@ -206,11 +206,11 @@ func (UnimplementedCPGServer) GetInvoice(context.Context, *GetInvoiceInput) (*Ge
 func (UnimplementedCPGServer) CheckInvoice(context.Context, *CheckInvoiceInput) (*CheckInvoiceOutput, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckInvoice not implemented")
 }
-func (UnimplementedCPGServer) TryCheckoutInvoice(context.Context, *TryCheckoutInvoiceInput) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method TryCheckoutInvoice not implemented")
-}
 func (UnimplementedCPGServer) RequestCheckout(context.Context, *RequestCheckoutInput) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestCheckout not implemented")
+}
+func (UnimplementedCPGServer) TryCheckoutInvoice(context.Context, *TryCheckoutInvoiceInput) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TryCheckoutInvoice not implemented")
 }
 func (UnimplementedCPGServer) mustEmbedUnimplementedCPGServer() {}
 func (UnimplementedCPGServer) testEmbeddedByValue()             {}
@@ -359,24 +359,6 @@ func _CPG_CheckInvoice_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CPG_TryCheckoutInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TryCheckoutInvoiceInput)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CPGServer).TryCheckoutInvoice(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CPG_TryCheckoutInvoice_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CPGServer).TryCheckoutInvoice(ctx, req.(*TryCheckoutInvoiceInput))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _CPG_RequestCheckout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RequestCheckoutInput)
 	if err := dec(in); err != nil {
@@ -391,6 +373,24 @@ func _CPG_RequestCheckout_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CPGServer).RequestCheckout(ctx, req.(*RequestCheckoutInput))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CPG_TryCheckoutInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TryCheckoutInvoiceInput)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CPGServer).TryCheckoutInvoice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CPG_TryCheckoutInvoice_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CPGServer).TryCheckoutInvoice(ctx, req.(*TryCheckoutInvoiceInput))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -431,12 +431,12 @@ var CPG_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CPG_CheckInvoice_Handler,
 		},
 		{
-			MethodName: "TryCheckoutInvoice",
-			Handler:    _CPG_TryCheckoutInvoice_Handler,
-		},
-		{
 			MethodName: "RequestCheckout",
 			Handler:    _CPG_RequestCheckout_Handler,
+		},
+		{
+			MethodName: "TryCheckoutInvoice",
+			Handler:    _CPG_TryCheckoutInvoice_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

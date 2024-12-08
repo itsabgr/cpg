@@ -35,6 +35,8 @@ const (
 	FieldLastCheckoutAt = "last_checkout_at"
 	// FieldCheckoutRequestAt holds the string denoting the checkout_request_at field in the database.
 	FieldCheckoutRequestAt = "checkout_request_at"
+	// FieldAutoCheckout holds the string denoting the auto_checkout field in the database.
+	FieldAutoCheckout = "auto_checkout"
 	// FieldCancelAt holds the string denoting the cancel_at field in the database.
 	FieldCancelAt = "cancel_at"
 	// FieldWalletAddress holds the string denoting the wallet_address field in the database.
@@ -58,6 +60,7 @@ var Columns = []string{
 	FieldFillAt,
 	FieldLastCheckoutAt,
 	FieldCheckoutRequestAt,
+	FieldAutoCheckout,
 	FieldCancelAt,
 	FieldWalletAddress,
 	FieldEncryptedSalt,
@@ -86,6 +89,8 @@ var (
 	MetadataValidator func(string) error
 	// DefaultCreateAt holds the default value on creation for the "create_at" field.
 	DefaultCreateAt func() time.Time
+	// DefaultAutoCheckout holds the default value on creation for the "auto_checkout" field.
+	DefaultAutoCheckout bool
 	// WalletAddressValidator is a validator for the "wallet_address" field. It is called by the builders before save.
 	WalletAddressValidator func(string) error
 	// EncryptedSaltValidator is a validator for the "encrypted_salt" field. It is called by the builders before save.
@@ -154,6 +159,11 @@ func ByLastCheckoutAt(opts ...sql.OrderTermOption) OrderOption {
 // ByCheckoutRequestAt orders the results by the checkout_request_at field.
 func ByCheckoutRequestAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCheckoutRequestAt, opts...).ToFunc()
+}
+
+// ByAutoCheckout orders the results by the auto_checkout field.
+func ByAutoCheckout(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAutoCheckout, opts...).ToFunc()
 }
 
 // ByCancelAt orders the results by the cancel_at field.

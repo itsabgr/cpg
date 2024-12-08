@@ -25,6 +25,7 @@ func (Invoice) Fields() []ent.Field {
 		field.Time("fill_at").Optional().Nillable(),
 		field.Time("last_checkout_at").Optional().Nillable(),
 		field.Time("checkout_request_at").Optional().Nillable(),
+		field.Bool("auto_checkout").Default(false).Immutable(),
 		field.Time("cancel_at").Optional().Nillable(),
 		field.String("wallet_address").Unique().NotEmpty().Immutable(),
 		field.Bytes("encrypted_salt").Sensitive().Unique().NotEmpty().Immutable(),
