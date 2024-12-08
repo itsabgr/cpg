@@ -19,9 +19,10 @@ func NewDB(client *database.Client) *DB {
 	}
 }
 
-func (db *DB) SetInvoiceCancelAt(ctx context.Context, id string, at time.Time) error {
+func (db *DB) SetInvoiceCancelAt(ctx context.Context, id string) error {
+	at := time.Now()
 	inv, err := db.client.Invoice.UpdateOneID(id).Where(
-		invoice.DeadlineGT(time.Now()),
+		invoice.DeadlineGT(at),
 		invoice.FillAtIsNil(),
 		invoice.LastCheckoutAtIsNil(),
 		invoice.CancelAtIsNil(),
@@ -38,9 +39,10 @@ func (db *DB) SetInvoiceCancelAt(ctx context.Context, id string, at time.Time) e
 	return nil
 }
 
-func (db *DB) SetInvoiceFillAt(ctx context.Context, id string, at time.Time) error {
+func (db *DB) SetInvoiceFillAt(ctx context.Context, id string) error {
+	at := time.Now()
 	inv, err := db.client.Invoice.UpdateOneID(id).Where(
-		invoice.DeadlineGT(time.Now()),
+		invoice.DeadlineGT(at),
 		invoice.FillAtIsNil(),
 		invoice.LastCheckoutAtIsNil(),
 		invoice.CancelAtIsNil(),
@@ -57,10 +59,11 @@ func (db *DB) SetInvoiceFillAt(ctx context.Context, id string, at time.Time) err
 	return nil
 }
 
-func (db *DB) SetInvoiceLastCheckoutAt(ctx context.Context, id string, at time.Time) error {
+func (db *DB) SetInvoiceLastCheckoutAt(ctx context.Context, id string) error {
+	at := time.Now()
 	inv, err := db.client.Invoice.UpdateOneID(id).Where(
 		invoice.Or(
-			invoice.DeadlineLT(time.Now()),
+			invoice.DeadlineLT(at),
 			invoice.FillAtNotNil(),
 			invoice.CancelAtNotNil(),
 		),
@@ -77,12 +80,13 @@ func (db *DB) SetInvoiceLastCheckoutAt(ctx context.Context, id string, at time.T
 	return nil
 }
 
-func (db *DB) SetInvoiceCheckoutRequestAt(ctx context.Context, id string, at time.Time) error {
+func (db *DB) SetInvoiceCheckoutRequestAt(ctx context.Context, id string) error {
+	at := time.Now()
 	inv, err := db.client.Invoice.UpdateOneID(id).Where(
 		invoice.And(
 			invoice.CheckoutRequestAtIsNil(),
 			invoice.Or(
-				invoice.DeadlineLT(time.Now()),
+				invoice.DeadlineLT(at),
 				invoice.FillAtNotNil(),
 				invoice.CancelAtNotNil(),
 			),
@@ -91,6 +95,31 @@ func (db *DB) SetInvoiceCheckoutRequestAt(ctx context.Context, id string, at tim
 
 	if inv == nil || (err != nil && database.IsNotFound(err)) {
 		return ge.New("invoice not found or can not checkout or already requested to checkout")
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *DB) TrySetAutoCheckout(ctx context.Context, id string) error {
+	at := time.Now()
+	inv, err := db.client.Invoice.UpdateOneID(id).Where(
+		invoice.And(
+			invoice.AutoCheckout(true),
+			invoice.CheckoutRequestAtIsNil(),
+			invoice.Or(
+				invoice.DeadlineLT(at),
+				invoice.FillAtNotNil(),
+				invoice.CancelAtNotNil(),
+			),
+		),
+	).SetCheckoutRequestAt(at).Save(ctx)
+
+	if inv == nil || (err != nil && database.IsNotFound(err)) {
+		return nil
 	}
 
 	if err != nil {

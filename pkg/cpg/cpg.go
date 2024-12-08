@@ -79,6 +79,11 @@ func (cpg *CPG) RecoverInvoice(ctx context.Context, params RecoverInvoiceParams)
 		err = ge.Wrap(ge.New("failed to insert invoice into db"), err)
 		return
 	}
+
+	if err = cpg.tryAutoCheckout(ctx, inv.ID); err != nil {
+		return err
+	}
+
 	return
 }
 
@@ -189,7 +194,7 @@ func (cpg *CPG) RequestCheckout(ctx context.Context, params RequestCheckoutParam
 		return ErrInvalidInvoiceStatus
 	}
 
-	if err = cpg.db.SetInvoiceCheckoutRequestAt(ctx, params.InvoiceID, time.Now()); err != nil {
+	if err = cpg.db.SetInvoiceCheckoutRequestAt(ctx, params.InvoiceID); err != nil {
 		err = ge.Wrap(ge.New("failed to update invoice checkout request"), err)
 		return err
 	}
@@ -234,11 +239,15 @@ func (cpg *CPG) CancelInvoice(ctx context.Context, params CancelInvoiceParams) (
 		return ErrInvalidInvoiceStatus
 	}
 
-	now := time.Now()
-	if err = cpg.db.SetInvoiceCancelAt(ctx, params.InvoiceID, now); err != nil {
+	if err = cpg.db.SetInvoiceCancelAt(ctx, params.InvoiceID); err != nil {
 		err = ge.Wrap(ge.New("failed to update invoice cancelAt"), err)
 		return err
 	}
+
+	if err = cpg.tryAutoCheckout(ctx, inv.ID); err != nil {
+		return err
+	}
+
 	return err
 }
 
@@ -326,7 +335,7 @@ func (cpg *CPG) CheckInvoice(ctx context.Context, params CheckInvoiceParams) (re
 
 	case InvoiceStatusExpired, InvoiceStatusCanceled, InvoiceStatusFilled, InvoiceStatusCheckout:
 
-		return result, nil
+		break
 
 	case InvoiceStatusPending:
 
@@ -341,15 +350,23 @@ func (cpg *CPG) CheckInvoice(ctx context.Context, params CheckInvoiceParams) (re
 			return result, nil
 		}
 
-		if err = cpg.db.SetInvoiceFillAt(ctx, inv.ID, time.Now()); err != nil {
+		now := time.Now()
+
+		if err = cpg.db.SetInvoiceFillAt(ctx, inv.ID); err != nil {
 			return result, ge.Wrap(ge.New("failed to update invoice fill_at"), err)
 		}
 
-		return result, nil
+		inv.FillAt = &now
 
 	default:
 		return result, ErrInvalidInvoiceStatus
 	}
+
+	if err = cpg.tryAutoCheckout(ctx, inv.ID); err != nil {
+		return result, err
+	}
+
+	return result, nil
 }
 
 type TryCheckoutInvoiceParams struct {
@@ -395,7 +412,7 @@ func (cpg *CPG) TryCheckoutInvoice(ctx context.Context, params TryCheckoutInvoic
 			return ge.Wrap(ge.New("failed to flush invoice"), err)
 		}
 
-		if err = cpg.db.SetInvoiceLastCheckoutAt(ctx, inv.ID, time.Now()); err != nil {
+		if err = cpg.db.SetInvoiceLastCheckoutAt(ctx, inv.ID); err != nil {
 			slog.Warn("failed to update invoice last_checkout_at", slog.String("invoice", inv.ID), slog.String("error", err.Error()))
 		}
 
@@ -404,4 +421,11 @@ func (cpg *CPG) TryCheckoutInvoice(ctx context.Context, params TryCheckoutInvoic
 	default:
 		return ErrInvalidInvoiceStatus
 	}
+}
+
+func (cpg *CPG) tryAutoCheckout(ctx context.Context, invoiceId string) error {
+	if err := cpg.db.TrySetAutoCheckout(ctx, invoiceId); err != nil {
+		return ge.Wrap(ge.Detail(ge.New("failed to update checkout request of auto-checkout invoice"), ge.D{"invoice": invoiceId}), err)
+	}
+	return nil
 }
