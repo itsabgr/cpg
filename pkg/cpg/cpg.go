@@ -120,6 +120,10 @@ func (cpg *CPG) CreateInvoice(ctx context.Context, params CreateInvoiceParams) (
 		err = ge.New("past deadline")
 		return result, err
 	}
+	if params.Deadline.After(time.Now().Add(time.Hour * 10000)) {
+		err = ge.New("too far deadline")
+		return result, err
+	}
 	assetProvider := cpg.assets.Get(params.AssetName)
 	if assetProvider == nil {
 		err = ge.New("asset is not supported")
