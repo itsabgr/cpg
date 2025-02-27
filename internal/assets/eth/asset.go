@@ -147,13 +147,13 @@ func (ass *asset) TryFlush(ctx context.Context, invoice *cpg.Invoice) error {
 	}
 
 	if walletBalance.Cmp(&ass.minAllowedAmount) < 0 {
-		return ge.Wrap(ge.New("too less wallet balance"), err)
+		return ge.Detail(ge.New("too less wallet balance"), ge.D{"balance": walletBalance})
 	}
 
 	txFee := big.NewInt(0).Mul(gasPrice, &ass.txGasLimit)
 
 	if txFee.Cmp(walletBalance) >= 0 {
-		return errors.New("tx fee overcomes the wallet balance")
+		return ge.New("tx fee overcomes the wallet balance")
 	}
 
 	walletPendingNonce, err := ass.ethClient.PendingNonceAt(ctx, common.HexToAddress(invoice.WalletAddress))

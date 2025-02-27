@@ -420,6 +420,9 @@ func (cpg *CPG) TryCheckoutInvoice(ctx context.Context, params TryCheckoutInvoic
 		inv.saltKeyring = cpg.saltKeyring
 
 		if err = asset.TryFlush(ctx, inv); err != nil {
+			if daemon.Debug() {
+				slog.Debug("failed to flush invoice", "err", err.Error())
+			}
 			return ge.Wrap(ge.New("failed to flush invoice"), err)
 		}
 
