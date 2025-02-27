@@ -214,7 +214,7 @@ func (db *DB) GetInvoice(ctx context.Context, id, walletAddress string, withSalt
 		return nil, err
 	}
 	inv := &Invoice{
-		ID:                id,
+		ID:                found.ID,
 		MinAmount:         *found.MinAmount,
 		Recipient:         found.Recipient,
 		Beneficiary:       found.Beneficiary,
