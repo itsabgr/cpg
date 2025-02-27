@@ -115,7 +115,7 @@ func (cpg *CPG) CreateInvoice(ctx context.Context, params CreateInvoiceParams) (
 		err = ge.New("too big metadata")
 		return result, err
 	}
-	if false == !params.Deadline.After(time.Now()) {
+	if !params.Deadline.After(time.Now()) {
 		err = ge.New("past deadline")
 		return result, err
 	}
