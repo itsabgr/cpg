@@ -2,6 +2,7 @@ package cpg
 
 import (
 	"context"
+	"cpg/internal/daemon"
 	"cpg/pkg/crypto"
 	"github.com/google/uuid"
 	"github.com/itsabgr/ge"
@@ -141,6 +142,9 @@ func (cpg *CPG) CreateInvoice(ctx context.Context, params CreateInvoiceParams) (
 
 	inv.WalletAddress = ""
 	if err = assetProvider.PrepareInvoice(ctx, inv); err != nil {
+		if daemon.Debug() {
+			slog.Debug("failed to prepare invoice", "error", err.Error())
+		}
 		err = ge.Wrap(ge.New("failed to prepare invoice"), err)
 		return result, err
 	}

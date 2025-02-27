@@ -72,6 +72,9 @@ func main() {
 		dbClient := ge.Must(database.Open("postgres", config.PostgresURI))
 
 		defer func() { _ = dbClient.Close() }()
+		if daemon.Debug() {
+			dbClient = dbClient.Debug()
+		}
 
 		ge.Throw(dbClient.Schema.Create(ctx))
 

@@ -194,7 +194,7 @@ func (db *DB) GetInvoice(ctx context.Context, id, walletAddress string, withSalt
 	where := make([]predicate.Invoice, 0, 2)
 
 	if id != "" {
-		where = append(where, invoice.WalletAddress(id))
+		where = append(where, invoice.ID(id))
 	}
 
 	if walletAddress != "" {
