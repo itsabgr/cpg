@@ -175,11 +175,13 @@ func (serv grpcServer) GetInvoice(ctx context.Context, input *proto.GetInvoiceIn
 
 func (serv grpcServer) CheckInvoice(ctx context.Context, input *proto.CheckInvoiceInput) (*proto.CheckInvoiceOutput, error) {
 
-	cancel, err := serv.rateLimitRequest(&ctx, time.Second*5, input)
-	if err != nil {
-		return nil, err
+	if input.GetInvoiceId() != "" {
+		cancel, err := serv.rateLimitRequest(&ctx, time.Second*5, input)
+		if err != nil {
+			return nil, err
+		}
+		defer cancel()
 	}
-	defer cancel()
 
 	result, err := serv.cpg.CheckInvoice(ctx, CheckInvoiceParams{
 		InvoiceID:     input.GetInvoiceId(),
