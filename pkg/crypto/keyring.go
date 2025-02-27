@@ -29,7 +29,7 @@ func (kr *KeyRing) Encrypt(msg []byte, nonce *[24]byte) []byte {
 }
 
 func (kr *KeyRing) Decrypt(encrypted []byte) ([]byte, *[24]byte) {
-	if len(encrypted) >= 24 {
+	if len(encrypted) <= 24 {
 		return nil, nil
 	}
 	var nonce [24]byte
