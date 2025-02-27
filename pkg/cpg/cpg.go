@@ -361,6 +361,9 @@ func (cpg *CPG) CheckInvoice(ctx context.Context, params CheckInvoiceParams) (re
 		now := time.Now()
 
 		if err = cpg.db.SetInvoiceFillAt(ctx, inv.ID); err != nil {
+			if daemon.Debug() {
+				slog.Debug("failed to update invoice fill_at", "err", err.Error())
+			}
 			return result, ge.Wrap(ge.New("failed to update invoice fill_at"), err)
 		}
 

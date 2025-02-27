@@ -173,6 +173,7 @@ func (db *DB) InsertInvoice(ctx context.Context, inv *Invoice, recovered bool) e
 
 func (db *DB) GetInvoice(ctx context.Context, id, walletAddress string, withSalt bool) (*Invoice, error) {
 	fields := []string{
+		invoice.FieldID,
 		invoice.FieldMinAmount,
 		invoice.FieldRecipient,
 		invoice.FieldBeneficiary,
